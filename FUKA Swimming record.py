@@ -16,11 +16,11 @@ plt.rcParams["font.family"] = "IPAexGothic"
 def normalize_columns(df):
     rename_map = {
         "日付": ["日付", "にちじ", "date"],
-        "種目": ["種目", "しゅもく", "event"],
+        "学年": ["学年"],
         "距離": ["距離", "きょり", "distance"],
-        "タイム": ["タイム", "time"],
         "長水路or短水路": ["長水路or短水路", "長短", "pool"],
-        "メモ": ["メモ", "memo"]
+        "タイム": ["タイム", "time"],
+        "会場": ["会場", "場所", "venue"],
     }
     new_cols = {}
     for col in df.columns:
@@ -32,8 +32,7 @@ def normalize_columns(df):
                 break
         if not found:
             new_cols[col] = col
-    df = df.rename(columns=new_cols)
-    return df
+    return df.rename(columns=new_cols)
 
 # ---------------------------------------------------------
 # Streamlit UI
@@ -41,7 +40,22 @@ def normalize_columns(df):
 st.title("楓果 Swimming Record Dashboard")
 
 file_path = "楓果記録.xlsx"
-sheet_name = "Sheet1"
+
+# ---------------------------------------------------------
+# 種目とシート名の対応（ほのかと同じ仕様）
+# ---------------------------------------------------------
+sheet_map = {
+    "フリー": "フリー",
+    "バッタ": "バッタ",
+    "ブレ": "ブレ",
+    "バック": "バック"
+}
+
+# 種目選択
+event = st.selectbox("種目を選択", list(sheet_map.keys()))
+
+# 正しいシート名を取得
+sheet_name = sheet_map[event]
 
 # ---------------------------------------------------------
 # データ読み込み
@@ -49,26 +63,23 @@ sheet_name = "Sheet1"
 data = pd.read_excel(file_path, sheet_name=sheet_name, usecols="A:F")
 data = normalize_columns(data)
 
-# ★ 日付を datetime に変換（これがないと sort_values でエラー）
+# ★ 日付を datetime に変換（必須）
 data["日付"] = pd.to_datetime(data["日付"], errors="coerce")
 
 # ---------------------------------------------------------
-# 種目・距離選択
+# 距離選択（50mしかない場合でも自動対応）
 # ---------------------------------------------------------
-events = sorted(data["種目"].dropna().unique())
-event = st.selectbox("種目を選択", events)
-
-distances = sorted(data[data["種目"] == event]["距離"].dropna().unique())
+distances = sorted(data["距離"].dropna().unique())
 distance = st.selectbox("距離を選択", distances)
 
 # ---------------------------------------------------------
 # フィルタリング
 # ---------------------------------------------------------
-filtered = data[(data["種目"] == event) & (data["距離"] == distance)]
+filtered = data[(data["距離"] == distance)]
 filtered = filtered.sort_values("日付")
 
 # ---------------------------------------------------------
-# ベストタイム（短水路・長水路を別々に表示）
+# ベストタイム（短水路・長水路）
 # ---------------------------------------------------------
 st.subheader("ベストタイム（短水路）")
 best_short = data[(data["距離"] == distance) & (data["長水路or短水路"] == "短水路")]
