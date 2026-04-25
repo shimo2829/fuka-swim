@@ -169,7 +169,7 @@ events = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 event = st.selectbox("種目を選択してください", events)
 
 # ---------------------------------------------------------
-# ★ 固定ヘッダー（ここに置くと必ず表示される）
+# ★ 固定ヘッダー（Cloud で100%表示される CSS）
 # ---------------------------------------------------------
 event_colors = {
     "フリー": "#1E90FF",
@@ -183,28 +183,28 @@ header_color = event_colors.get(event, "#000000")
 
 st.markdown(
     f"""
-    <div style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        background-color: {header_color};
-        padding: 18px 20px;
-        font-size: 36px;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        border-bottom: 3px solid #ddd;
-        z-index: 9999;
-    ">
-        {event}
-    </div>
-
     <style>
+        .header-title {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: {header_color};
+            padding: 18px 20px;
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            border-bottom: 3px solid #ddd;
+            z-index: 999999;
+        }}
+
         .block-container {{
-            padding-top: 110px;
+            padding-top: 140px !important;
         }}
     </style>
+
+    <div class="header-title">{event}</div>
     """,
     unsafe_allow_html=True
 )
@@ -490,5 +490,4 @@ if st.button("この行を削除する"):
         commit_message=f"Delete record: {event} {distance}m"
     )
 
-    st.success("削除しました！（GitHub にも反映済み）")
-    st.rerun()
+    st.success("削除しました！（
