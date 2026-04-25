@@ -10,13 +10,14 @@ import requests
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-# 日本語フォント設定
-plt.rcParams['font.family'] = 'IPAexGothic'
-plt.rcParams['axes.unicode_minus'] = False
+# ---------------------------------------------------------
+# 日本語フォント設定（GitHub の ipaexg.ttf を読み込む）
+# ---------------------------------------------------------
 import matplotlib.font_manager as fm
-font_path = "IPAexGothic.ttf"
+font_path = os.path.join(os.path.dirname(__file__), "ipaexg.ttf")
 fm.fontManager.addfont(font_path)
 plt.rcParams['font.family'] = 'IPAexGothic'
+plt.rcParams['axes.unicode_minus'] = False
 
 # ---------------------------------------------------------
 # GitHub secrets 読み込み
@@ -160,7 +161,7 @@ events = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 event = st.selectbox("種目を選択してください", events)
 
 # ---------------------------------------------------------
-# 種目ごとのヘッダー色設定（固定ヘッダー）
+# 種目ごとのヘッダー色設定
 # ---------------------------------------------------------
 event_colors = {
     "フリー": "#1E90FF",
@@ -199,6 +200,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 # ---------------------------------------------------------
 # Excel 読み込み
 # ---------------------------------------------------------
@@ -287,6 +289,7 @@ st.subheader("最新の記録")
 st.write(f"日付：{latest['日付']}")
 st.write(f"タイム：{seconds_to_swim_format(latest['タイム'])}")
 st.write(f"会場：{latest['会場']}")
+
 # ---------------------------------------------------------
 # ベストタイム
 # ---------------------------------------------------------
