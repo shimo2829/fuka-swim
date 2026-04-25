@@ -191,12 +191,15 @@ st.markdown(
             width: 100%;
             background-color: {header_color};
             padding: 18px 20px;
-            font-size: 36px;
+            font-size: 32px;
             font-weight: bold;
             color: white;
             text-align: center;
             border-bottom: 3px solid #ddd;
             z-index: 999999;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
         }}
 
         .block-container {{
@@ -204,10 +207,14 @@ st.markdown(
         }}
     </style>
 
-    <div class="header-title">{event}</div>
+    <div class="header-title">
+        <span>FUKA Swimming record</span>
+        <span>{event}</span>
+    </div>
     """,
     unsafe_allow_html=True
 )
+
 
 # ---------------------------------------------------------
 # Excel 読み込み
