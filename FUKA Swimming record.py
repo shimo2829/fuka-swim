@@ -490,4 +490,5 @@ if st.button("この行を削除する"):
         commit_message=f"Delete record: {event} {distance}m"
     )
 
-    st.success("削除しました！（
+    st.success("削除しました！（GitHub にも反映済み）")
+    st.rerun()
