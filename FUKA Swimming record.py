@@ -10,6 +10,14 @@ import requests
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
+# 日本語フォント設定
+plt.rcParams['font.family'] = 'IPAexGothic'
+plt.rcParams['axes.unicode_minus'] = False
+import matplotlib.font_manager as fm
+font_path = "IPAexGothic.ttf"
+fm.fontManager.addfont(font_path)
+plt.rcParams['font.family'] = 'IPAexGothic'
+
 # ---------------------------------------------------------
 # GitHub secrets 読み込み
 # ---------------------------------------------------------
