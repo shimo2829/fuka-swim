@@ -540,4 +540,5 @@ target_index = st.number_input(
 
 target_row = edit_df.iloc[target_index]
 
-st.write("選択中の
+st.write("選択中の記録：")
+st.write(target_row)
