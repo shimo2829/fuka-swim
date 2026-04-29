@@ -188,7 +188,19 @@ event_colors = {
 title_color = event_colors.get(event, "#000000")
 
 # ---------------------------------------------------------
-# 固定ヘッダー（③） ← 必ずここ
+# 種目 → 英語（ブレだけカタカナ）
+# ---------------------------------------------------------
+event_english = {
+    "フリー": "Free",
+    "バッタ": "Butterfly",
+    "バック": "Backstroke",
+    "メドレー": "Medley",
+    "ブレ": "ブレ"
+}
+event_en = event_english.get(event, event)
+
+# ---------------------------------------------------------
+# 固定ヘッダー（③）
 # ---------------------------------------------------------
 st.markdown(
     f"""
@@ -198,8 +210,8 @@ st.markdown(
         left: 0;
         width: 100%;
         background-color: white;
-        padding: 15px 20px;
-        font-size: 26px;
+        padding: 18px 25px;
+        font-size: 28px;
         font-weight: bold;
         border-bottom: 2px solid #ddd;
         z-index: 9999;
@@ -207,13 +219,13 @@ st.markdown(
         justify-content: space-between;
         align-items: center;
     ">
-        <span>FUKA Swimming records</span>
-        <span style="color:{title_color};">{event}</span>
+        <span>FUKA Swimming Records Dashboard</span>
+        <span style="color:{title_color};">【{event_en}】</span>
     </div>
 
     <style>
         .block-container {{
-            padding-top: 90px;
+            padding-top: 110px;
         }}
     </style>
     """,
@@ -520,7 +532,7 @@ if submitted:
 
         except Exception as e:
             st.error(f"Excel 書き込みエラー: {e}")
-
+            
 # ---------------------------------------------------------
 # 記録の修正・削除
 # ---------------------------------------------------------
