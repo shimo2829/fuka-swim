@@ -558,7 +558,12 @@ with st.form("edit_form"):
         "長水路 or 短水路（修正）",
         ["長水路", "短水路"],
         index=0 if target_row["長水路or短水路"] == "長水路" else 1
-        
+    )
+    e_time_str = st.text_input("タイム（修正）", value=seconds_to_swim_format(target_row["タイム"]))
+    e_place = st.text_input("会場（修正）", value=target_row["会場"])
+
+    edit_submitted = st.form_submit_button("修正する")
+
 # -------------------------
 # 削除ボタン
 # -------------------------
