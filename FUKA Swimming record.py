@@ -170,13 +170,25 @@ if local_excel is None:
     st.stop()
 
 # ---------------------------------------------------------
-# 種目選択
+# 種目選択（①）
 # ---------------------------------------------------------
 events = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 event = st.selectbox("種目を選択してください", events)
 
 # ---------------------------------------------------------
-# ★ 固定ヘッダー（スクロールしても常に見える）
+# 種目カラー（②）
+# ---------------------------------------------------------
+event_colors = {
+    "フリー": "#1E90FF",
+    "バッタ": "#FF8C00",
+    "ブレ":   "#32CD32",
+    "バック": "#8A2BE2",
+    "メドレー": "#DC143C"
+}
+title_color = event_colors.get(event, "#000000")
+
+# ---------------------------------------------------------
+# 固定ヘッダー（③） ← 必ずここ
 # ---------------------------------------------------------
 st.markdown(
     f"""
@@ -209,20 +221,7 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# ★ 種目カラー（タイトル色）
-# ---------------------------------------------------------
-event_colors = {
-    "フリー": "#1E90FF",
-    "バッタ": "#FF8C00",
-    "ブレ":   "#32CD32",
-    "バック": "#8A2BE2",
-    "メドレー": "#DC143C"
-}
-title_color = event_colors.get(event, "#000000")
-
-
-# ---------------------------------------------------------
-# Excel 読み込み
+# Excel 読み込み（ここから下はそのまま）
 # ---------------------------------------------------------
 sheet_name = event
 
@@ -404,7 +403,7 @@ options = {
 }
 
 # ---------------------------------------------------------
-# ★ HTML タイトル（色つき）
+# HTML タイトル
 # ---------------------------------------------------------
 st.markdown(
     f"""
@@ -541,51 +540,4 @@ target_index = st.number_input(
 
 target_row = edit_df.iloc[target_index]
 
-st.write("選択中の記録：")
-st.write(target_row)
-
-# -------------------------
-# 修正フォーム
-# -------------------------
-with st.form("edit_form"):
-    e_date = st.date_input("日付（修正）", value=target_row["日付"])
-    e_grade = st.selectbox(
-        "学年（修正）",
-        ["小1","小2","小3","小4","小5","小6","中1","中2","中3"],
-        index=["小1","小2","小3","小4","小5","小6","中1","中2","中3"].index(target_row["学年"])
-    )
-    e_distance = st.number_input("距離（修正）", value=int(target_row["距離"]))
-    e_course = st.selectbox(
-        "長水路 or 短水路（修正）",
-        ["長水路", "短水路"],
-        index=0 if target_row["長水路or短水路"] == "長水路" else 1
-    )
-    e_time_str = st.text_input("タイム（修正）", value=seconds_to_swim_format(target_row["タイム"]))
-    e_place = st.text_input("会場（修正）", value=target_row["会場"])
-
-    edit_submitted = st.form_submit_button("修正する")
-
-# -------------------------
-# 削除ボタン
-# -------------------------
-if st.button("この行を削除する"):
-    book = pd.read_excel(local_excel, sheet_name=sheet_name)
-    book = normalize_columns(book)
-    book = book.iloc[:, :6]
-    book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
-
-    book = book.drop(target_row.name)
-
-    save_sheet_without_deleting_others(local_excel, sheet_name, book)
-
-    update_excel_to_github(
-        local_path=local_excel,
-        repo=GITHUB_REPO,
-        file_path=GITHUB_FILE_PATH,
-        token=GITHUB_TOKEN,
-        commit_message=f"Delete record: {event} {distance}m"
-    )
-
-    st.success("削除しました！（GitHub にも反映済み）")
-    st.rerun()
-
+st.write("選択中の
