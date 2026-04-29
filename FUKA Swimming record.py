@@ -194,10 +194,10 @@ event_colors = {
 title_color = event_colors.get(event, "#000000")
 
 # ---------------------------------------------------------
-# ★ 固定ヘッダー（FUKA Swimming record + 種目名）
+# ★ 固定ヘッダー（FUKA Swimming record）
 # ---------------------------------------------------------
 st.markdown(
-    f"""
+    """
     <div style="
         position: fixed;
         top: 0;
@@ -209,18 +209,14 @@ st.markdown(
         font-weight: bold;
         border-bottom: 2px solid #ddd;
         z-index: 9999;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
     ">
-        <span>FUKA Swimming record</span>
-        <span style="color:{title_color};">{event}</span>
+        FUKA Swimming record
     </div>
 
     <style>
-        .block-container {{
+        .block-container {
             padding-top: 90px;
-        }}
+        }
     </style>
     """,
     unsafe_allow_html=True
