@@ -176,6 +176,39 @@ events = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 event = st.selectbox("種目を選択してください", events)
 
 # ---------------------------------------------------------
+# ★ 固定ヘッダー（FUKA Swimming record + 種目名）
+# ---------------------------------------------------------
+st.markdown(
+    f"""
+    <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: white;
+        padding: 15px 20px;
+        font-size: 26px;
+        font-weight: bold;
+        border-bottom: 2px solid #ddd;
+        z-index: 9999;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    ">
+        <span>FUKA Swimming record</span>
+        <span style="color:{title_color};">{event}</span>
+    </div>
+
+    <style>
+        .block-container {{
+            padding-top: 90px;
+        }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ---------------------------------------------------------
 # ★ 種目カラー（タイトル色）
 # ---------------------------------------------------------
 event_colors = {
