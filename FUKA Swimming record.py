@@ -176,7 +176,19 @@ events = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 event = st.selectbox("種目を選択してください", events)
 
 # ---------------------------------------------------------
-# ★ Excel 読み込み（ここで data を先に作る）
+# ★ 種目カラー（タイトル色）
+# ---------------------------------------------------------
+event_colors = {
+    "フリー": "#1E90FF",
+    "バッタ": "#FF8C00",
+    "ブレ":   "#32CD32",
+    "バック": "#8A2BE2",
+    "メドレー": "#DC143C"
+}
+title_color = event_colors.get(event, "#000000")
+
+# ---------------------------------------------------------
+# Excel 読み込み
 # ---------------------------------------------------------
 sheet_name = event
 
@@ -191,7 +203,7 @@ data = data.dropna(subset=["距離"])
 data["距離"] = data["距離"].astype(int)
 
 # ---------------------------------------------------------
-# ★ 距離選択（data が存在するのでエラーにならない）
+# 距離選択
 # ---------------------------------------------------------
 if event == "メドレー":
     distance_list = [200, 400]
@@ -203,12 +215,12 @@ else:
 distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
-# ★ 長水路／短水路
+# 長水路／短水路
 # ---------------------------------------------------------
 course = st.selectbox("長水路／短水路を選択", ["全記録", "短水路", "長水路"])
 
 # ---------------------------------------------------------
-# ★ データ絞り込み（ここで course と distance を使う）
+# データ絞り込み
 # ---------------------------------------------------------
 if course == "全記録":
     filtered = data[data["距離"] == distance].sort_values("日付")
@@ -238,7 +250,7 @@ y_data = filtered["タイム"].tolist()
 y_label = filtered["タイム_表示"].tolist()
 
 # ---------------------------------------------------------
-# Y軸レンジ（メドレーは10秒刻み、他は2秒刻み）
+# Y軸レンジ
 # ---------------------------------------------------------
 y_min_raw = min(y_data)
 y_max_raw = max(y_data)
@@ -253,7 +265,7 @@ else:
     y_interval = 2
 
 # ---------------------------------------------------------
-# 点の色分け（長水路＝青、短水路＝赤）
+# 点の色分け
 # ---------------------------------------------------------
 series_data = [
     {
@@ -267,7 +279,7 @@ series_data = [
 ]
 
 # ---------------------------------------------------------
-# Y軸フォーマッタ（メドレーは分＋秒）
+# Y軸フォーマッタ
 # ---------------------------------------------------------
 if "メドレー" in event:
     y_axis_formatter = JsCode("""
@@ -281,7 +293,7 @@ else:
     y_axis_formatter = "{value}"
 
 # ---------------------------------------------------------
-# ★ ECharts オプション（HONOKA と完全同じ）
+# ECharts オプション
 # ---------------------------------------------------------
 options = {
     "legend": {
@@ -322,7 +334,6 @@ options = {
     ],
 
     "series": [
-        # ★ ダミー凡例（長水路）
         {
             "name": "長水路",
             "type": "line",
@@ -333,7 +344,6 @@ options = {
             "symbol": "circle",
             "symbolSize": 12
         },
-        # ★ ダミー凡例（短水路）
         {
             "name": "短水路",
             "type": "line",
@@ -344,7 +354,6 @@ options = {
             "symbol": "circle",
             "symbolSize": 12
         },
-        # ★ 実データ（線は灰色、点は青/赤）
         {
             "type": "line",
             "data": series_data,
@@ -361,11 +370,11 @@ options = {
 }
 
 # ---------------------------------------------------------
-# ★ HTML タイトル（凡例より下に確実に表示される）
+# ★ HTML タイトル（色つき）
 # ---------------------------------------------------------
 st.markdown(
     f"""
-    <h3 style="text-align:center; margin-top:10px; margin-bottom:10px;">
+    <h3 style="text-align:center; margin-top:10px; margin-bottom:10px; color:{title_color};">
         {event} {distance}m（{course}）の記録推移
     </h3>
     """,
@@ -388,7 +397,7 @@ st.write(f"タイム：{seconds_to_swim_format(latest['タイム'])}")
 st.write(f"会場：{latest['会場']}")
 
 # ---------------------------------------------------------
-# ベストタイム（短水路・長水路）
+# ベストタイム
 # ---------------------------------------------------------
 best_short = data[
     (data["距離"] == distance) &
@@ -402,9 +411,6 @@ best_long = data[
     (data["タイム"].notna())
 ]
 
-# -------------------------
-# 短水路ベスト
-# -------------------------
 st.subheader("ベストタイム（短水路）")
 if not best_short.empty:
     t = best_short["タイム"].min()
@@ -414,9 +420,6 @@ if not best_short.empty:
 else:
     st.write("データなし")
 
-# -------------------------
-# 長水路ベスト
-# -------------------------
 st.subheader("ベストタイム（長水路）")
 if not best_long.empty:
     t = best_long["タイム"].min()
@@ -425,6 +428,7 @@ if not best_long.empty:
     st.write(f"更新日：{d}")
 else:
     st.write("データなし")
+
 # ---------------------------------------------------------
 # 新しい記録を追加
 # ---------------------------------------------------------
@@ -521,48 +525,7 @@ with st.form("edit_form"):
         "長水路 or 短水路（修正）",
         ["長水路", "短水路"],
         index=0 if target_row["長水路or短水路"] == "長水路" else 1
-    )
-    e_time_str = st.text_input("タイム（修正）", value=seconds_to_swim_format(target_row["タイム"]))
-    e_place = st.text_input("会場（修正）", value=target_row["会場"])
-
-    edit_submitted = st.form_submit_button("修正する")
-
-# -------------------------
-# 修正処理
-# -------------------------
-if edit_submitted:
-    new_time_sec = time_to_seconds(e_time_str)
-
-    if new_time_sec is None:
-        st.error("タイムの形式が正しくありません")
-    else:
-        book = pd.read_excel(local_excel, sheet_name=sheet_name)
-        book = normalize_columns(book)
-        book = book.iloc[:, :6]
-        book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
-
-        book.loc[target_row.name] = [
-            pd.to_datetime(e_date),
-            e_grade,
-            int(e_distance),
-            e_course,
-            new_time_sec,
-            e_place
-        ]
-
-        save_sheet_without_deleting_others(local_excel, sheet_name, book)
-
-        update_excel_to_github(
-            local_path=local_excel,
-            repo=GITHUB_REPO,
-            file_path=GITHUB_FILE_PATH,
-            token=GITHUB_TOKEN,
-            commit_message=f"Edit record: {event} {distance}m"
-        )
-
-        st.success("修正しました！（GitHub にも反映済み）")
-        st.rerun()
-
+        
 # -------------------------
 # 削除ボタン
 # -------------------------
