@@ -176,7 +176,22 @@ events = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 event = st.selectbox("種目を選択してください", events)
 
 # ---------------------------------------------------------
-# 距離選択
+# ★ Excel 読み込み（ここで data を先に作る）
+# ---------------------------------------------------------
+sheet_name = event
+
+data = pd.read_excel(local_excel, sheet_name=sheet_name)
+data = data.iloc[:, :6]
+data.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
+data = normalize_columns(data)
+
+data["タイム"] = data["タイム"].apply(time_to_seconds)
+data["距離"] = pd.to_numeric(data["距離"], errors="coerce")
+data = data.dropna(subset=["距離"])
+data["距離"] = data["距離"].astype(int)
+
+# ---------------------------------------------------------
+# ★ 距離選択（data が存在するのでエラーにならない）
 # ---------------------------------------------------------
 if event == "メドレー":
     distance_list = [200, 400]
@@ -188,29 +203,12 @@ else:
 distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
-# ★ 長水路／短水路（ここで先に定義する）
+# ★ 長水路／短水路
 # ---------------------------------------------------------
 course = st.selectbox("長水路／短水路を選択", ["全記録", "短水路", "長水路"])
 
 # ---------------------------------------------------------
-# ★ データ絞り込み（course をここで使う）
-# ---------------------------------------------------------
-if course == "全記録":
-    filtered = data[data["距離"] == distance].sort_values("日付")
-else:
-    filtered = data[
-        (data["距離"] == distance) &
-        (data["長水路or短水路"] == course)
-    ].sort_values("日付")
-
-filtered = filtered[filtered["タイム"].notna()]
-
-if filtered.empty:
-    st.error(f"{event} の {distance}m（{course}）のデータがありません")
-    st.stop()
-
-# ---------------------------------------------------------
-# データ絞り込み
+# ★ データ絞り込み（ここで course と distance を使う）
 # ---------------------------------------------------------
 if course == "全記録":
     filtered = data[data["距離"] == distance].sort_values("日付")
