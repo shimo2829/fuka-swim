@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import font_manager
 import os
 import re
 import math
@@ -9,6 +7,7 @@ import base64
 import requests
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
+from streamlit_echarts import st_echarts, JsCode
 
 # ---------------------------------------------------------
 # ログイン（パスワード認証）
@@ -28,21 +27,12 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ---------------------------------------------------------
-# ページ設定（ヘッダーが消える問題を防ぐ）
+# ページ設定
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="FUKA Swimming Record",
     layout="wide"
 )
-
-# ---------------------------------------------------------
-# 日本語フォント設定（GitHub の ipaexg.ttf を読み込む）
-# ---------------------------------------------------------
-import matplotlib.font_manager as fm
-font_path = os.path.join(os.path.dirname(__file__), "ipaexg.ttf")
-fm.fontManager.addfont(font_path)
-plt.rcParams['font.family'] = 'IPAexGothic'
-plt.rcParams['axes.unicode_minus'] = False
 
 # ---------------------------------------------------------
 # GitHub secrets 読み込み
@@ -172,7 +162,7 @@ def seconds_to_swim_format(sec):
     return f"{m}'{s:05.2f}"
 
 # ---------------------------------------------------------
-# GitHub から最新 Excel を取得
+# Excel 読み込み
 # ---------------------------------------------------------
 local_excel = download_excel_from_github(GITHUB_REPO, GITHUB_FILE_PATH, GITHUB_TOKEN)
 
@@ -184,101 +174,6 @@ if local_excel is None:
 # ---------------------------------------------------------
 events = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 event = st.selectbox("種目を選択してください", events)
-
-# ---------------------------------------------------------
-# ★ 固定ヘッダー（Cloud で100%表示される CSS）
-# ---------------------------------------------------------
-event_colors = {
-    "フリー": "#1E90FF",
-    "バッタ": "#FF8C00",
-    "ブレ":   "#32CD32",
-    "バック": "#8A2BE2",
-    "メドレー": "#DC143C"
-}
-
-header_color = event_colors.get(event, "#000000")
-
-st.markdown(
-    f"""
-    <style>
-        .header-title {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: {header_color};
-            padding: 18px 20px;
-            font-size: 32px;
-            font-weight: bold;
-            color: white;
-            text-align: center;
-            border-bottom: 3px solid #ddd;
-            z-index: 999999;
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-        }}
-
-        /* スマホ画面（幅600px以下）のときだけ小さくする */
-        @media screen and (max-width: 600px) {{
-            .header-title {{
-                font-size: 20px;
-                padding: 12px 10px;
-                gap: 20px;
-            }}
-            .block-container {{
-                padding-top: 100px !important;
-            }}
-        }}
-
-        .block-container {{
-            padding-top: 140px !important;
-        }}
-    </style>
-
-    <div class="header-title">
-        <span>FUKA Swimming record</span>
-        <span>{event}</span>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ---------------------------------------------------------
-# Excel 読み込み
-# ---------------------------------------------------------
-sheet_name = event
-
-data = pd.read_excel(local_excel, sheet_name=sheet_name)
-data = data.iloc[:, :6]
-data.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
-data = normalize_columns(data)
-
-# タイム変換
-data["タイム"] = data["タイム"].apply(time_to_seconds)
-
-# 距離を数値化
-data["距離"] = pd.to_numeric(data["距離"], errors="coerce")
-data = data.dropna(subset=["距離"])
-data["距離"] = data["距離"].astype(int)
-
-# ---------------------------------------------------------
-# 距離選択
-# ---------------------------------------------------------
-if event == "メドレー":
-    distance_list = [200, 400]
-elif event == "ブレ":
-    distance_list = [50, 100]
-else:
-    distance_list = sorted(data["距離"].unique())
-
-distance = st.selectbox("距離を選択してください", distance_list)
-
-# ---------------------------------------------------------
-# 長水路／短水路
-# ---------------------------------------------------------
-course = st.selectbox("長水路／短水路を選択", ["全記録", "短水路", "長水路"])
 
 # ---------------------------------------------------------
 # データ絞り込み
@@ -298,31 +193,157 @@ if filtered.empty:
     st.stop()
 
 # ---------------------------------------------------------
-# グラフ
+# ECharts 用データ準備
 # ---------------------------------------------------------
-fig, ax = plt.subplots(figsize=(10, 5))
+filtered["日付_学年"] = (
+    filtered["日付"].dt.strftime("%Y-%m-%d") + "（" + filtered["学年"] + "）"
+)
 
-ax.plot(filtered["日付"], filtered["タイム"], color="gray", linewidth=2)
+filtered["タイム_表示"] = filtered["タイム"].apply(seconds_to_swim_format)
 
-color_map = {"長水路": "tab:blue", "短水路": "tab:red"}
+x_data = filtered["日付_学年"].tolist()
+y_data = filtered["タイム"].tolist()
+y_label = filtered["タイム_表示"].tolist()
 
-for c in ["長水路", "短水路"]:
-    df_c = filtered[filtered["長水路or短水路"] == c]
-    if not df_c.empty:
-        ax.scatter(df_c["日付"], df_c["タイム"], color=color_map[c], label=c, s=60)
+# ---------------------------------------------------------
+# Y軸レンジ（メドレーは10秒刻み、他は2秒刻み）
+# ---------------------------------------------------------
+y_min_raw = min(y_data)
+y_max_raw = max(y_data)
 
-ax.set_xlabel("日付")
-ax.set_ylabel("タイム")
-ax.set_title(f"{event} {distance}m（{course}）の記録推移")
-ax.grid(True)
+if "メドレー" in event:
+    y_min = math.floor(y_min_raw / 10) * 10
+    y_max = math.ceil(y_max_raw / 10) * 10
+    y_interval = 10
+else:
+    y_min = math.floor(y_min_raw / 2) * 2
+    y_max = math.ceil(y_max_raw / 2) * 2
+    y_interval = 2
 
-if course == "全記録":
-    ax.legend()
+# ---------------------------------------------------------
+# 点の色分け（長水路＝青、短水路＝赤）
+# ---------------------------------------------------------
+series_data = [
+    {
+        "value": y_data[i],
+        "label": y_label[i],
+        "itemStyle": {
+            "color": "#3366FF" if filtered["長水路or短水路"].iloc[i] == "長水路" else "#FF3333"
+        }
+    }
+    for i in range(len(y_data))
+]
 
-yticks = ax.get_yticks()
-ax.set_yticklabels([seconds_to_swim_format(t) for t in yticks])
+# ---------------------------------------------------------
+# Y軸フォーマッタ（メドレーは分＋秒）
+# ---------------------------------------------------------
+if "メドレー" in event:
+    y_axis_formatter = JsCode("""
+        function (value) {
+            var min = Math.floor(value / 60);
+            var sec = value % 60;
+            return min + "'" + sec.toFixed(2).padStart(5, '0');
+        }
+    """)
+else:
+    y_axis_formatter = "{value}"
 
-st.pyplot(fig)
+# ---------------------------------------------------------
+# ★ ECharts オプション（HONOKA と完全同じ）
+# ---------------------------------------------------------
+options = {
+    "legend": {
+        "top": 0,
+        "left": "center",
+        "data": ["長水路", "短水路"],
+        "textStyle": {"color": "#000"}
+    },
+
+    "tooltip": {
+        "trigger": "axis",
+        "formatter": JsCode("""
+            function (params) {
+                return params[0].data.label;
+            }
+        """)
+    },
+
+    "xAxis": {
+        "type": "category",
+        "data": x_data
+    },
+
+    "yAxis": {
+        "type": "value",
+        "inverse": False,
+        "min": y_min,
+        "max": y_max,
+        "interval": y_interval,
+        "axisLabel": {
+            "formatter": y_axis_formatter
+        }
+    },
+
+    "dataZoom": [
+        {"type": "inside"},
+        {"type": "slider"}
+    ],
+
+    "series": [
+        # ★ ダミー凡例（長水路）
+        {
+            "name": "長水路",
+            "type": "line",
+            "data": [],
+            "lineStyle": {"color": "#3366FF"},
+            "itemStyle": {"color": "#3366FF"},
+            "showSymbol": True,
+            "symbol": "circle",
+            "symbolSize": 12
+        },
+        # ★ ダミー凡例（短水路）
+        {
+            "name": "短水路",
+            "type": "line",
+            "data": [],
+            "lineStyle": {"color": "#FF3333"},
+            "itemStyle": {"color": "#FF3333"},
+            "showSymbol": True,
+            "symbol": "circle",
+            "symbolSize": 12
+        },
+        # ★ 実データ（線は灰色、点は青/赤）
+        {
+            "type": "line",
+            "data": series_data,
+            "smooth": False,
+            "lineStyle": {"color": "gray", "width": 2},
+            "label": {
+                "show": True,
+                "position": "top",
+                "formatter": JsCode("function (p) { return p.data.label; }"),
+                "fontSize": 12
+            }
+        }
+    ]
+}
+
+# ---------------------------------------------------------
+# ★ HTML タイトル（凡例より下に確実に表示される）
+# ---------------------------------------------------------
+st.markdown(
+    f"""
+    <h3 style="text-align:center; margin-top:10px; margin-bottom:10px;">
+        {event} {distance}m（{course}）の記録推移
+    </h3>
+    """,
+    unsafe_allow_html=True
+)
+
+# ---------------------------------------------------------
+# グラフ描画
+# ---------------------------------------------------------
+st_echarts(options=options, height="500px")
 
 # ---------------------------------------------------------
 # 最新記録
@@ -335,7 +356,7 @@ st.write(f"タイム：{seconds_to_swim_format(latest['タイム'])}")
 st.write(f"会場：{latest['会場']}")
 
 # ---------------------------------------------------------
-# ベストタイム
+# ベストタイム（短水路・長水路）
 # ---------------------------------------------------------
 best_short = data[
     (data["距離"] == distance) &
@@ -349,6 +370,9 @@ best_long = data[
     (data["タイム"].notna())
 ]
 
+# -------------------------
+# 短水路ベスト
+# -------------------------
 st.subheader("ベストタイム（短水路）")
 if not best_short.empty:
     t = best_short["タイム"].min()
@@ -358,6 +382,9 @@ if not best_short.empty:
 else:
     st.write("データなし")
 
+# -------------------------
+# 長水路ベスト
+# -------------------------
 st.subheader("ベストタイム（長水路）")
 if not best_long.empty:
     t = best_long["タイム"].min()
@@ -366,7 +393,6 @@ if not best_long.empty:
     st.write(f"更新日：{d}")
 else:
     st.write("データなし")
-
 # ---------------------------------------------------------
 # 新しい記録を追加
 # ---------------------------------------------------------
@@ -528,3 +554,4 @@ if st.button("この行を削除する"):
 
     st.success("削除しました！（GitHub にも反映済み）")
     st.rerun()
+
