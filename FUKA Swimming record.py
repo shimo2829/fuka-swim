@@ -180,7 +180,8 @@ event = st.selectbox(
     "種目を選択してください",
     ["フリー", "バッタ", "ブレ", "バック", "メドレー"],
     index=["フリー", "バッタ", "ブレ", "バック", "メドレー"].index(event),
-  key=f"event_selector_{st.session_state.get('selected_event', 'フリー')}"
+    key=f"event_selector_{st.session_state.get('selected_event', 'フリー')}"
+)
 
 # ③ 選んだ event を保存
 st.session_state["selected_event"] = event
