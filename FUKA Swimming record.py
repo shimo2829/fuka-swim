@@ -300,7 +300,6 @@ filtered = filtered[filtered["タイム"].notna()]
 if filtered.empty:
     st.error(f"{event} の {distance}m（{course}）のデータがありません")
     st.stop()
-
 # ---------------------------------------------------------
 # グラフ用データ整形
 # ---------------------------------------------------------
@@ -325,6 +324,70 @@ else:
     y_min = math.floor(y_min_raw / 2) * 2
     y_max = math.ceil(y_max_raw / 2) * 2
     y_interval = 2
+
+# ---------------------------------------------------------
+# series_data（1本の線、点ごとに色を変える）
+# ---------------------------------------------------------
+series_data = [
+    {
+        "value": y_data[i],
+        "label": y_label[i],
+        "itemStyle": {
+            "color": "#3366FF" if filtered["長水路or短水路"].iloc[i] == "長水路" else "#FF3333"
+        }
+    }
+    for i in range(len(y_data))
+]
+
+# ---------------------------------------------------------
+# ECharts options（1本の線に戻す）
+# ---------------------------------------------------------
+options = {
+    "legend": {
+        "top": 0,
+        "left": "center",
+        "data": ["長水路", "短水路"],
+        "textStyle": {"color": "#000"}
+    },
+    "tooltip": {
+        "trigger": "axis",
+        "formatter": JsCode("""
+            function (params) {
+                return params[0].data.label;
+            }
+        """)
+    },
+    "xAxis": {"type": "category", "data": x_data},
+    "yAxis": {
+        "type": "value",
+        "inverse": False,
+        "min": y_min,
+        "max": y_max,
+        "interval": y_interval,
+        "axisLabel": {"formatter": "{value}"}
+    },
+    "dataZoom": [{"type": "inside"}, {"type": "slider"}],
+
+    "series": [
+        {
+            "type": "line",
+            "data": series_data,
+            "smooth": False,
+            "lineStyle": {"color": "gray", "width": 2},
+            "label": {
+                "show": True,
+                "position": "top",
+                "formatter": JsCode("function (p) { return p.data.label; }"),
+                "fontSize": 12
+            }
+        }
+    ]
+}
+
+# ---------------------------------------------------------
+# グラフ描画
+# ---------------------------------------------------------
+st_echarts(options=options, height="500px")
 
 # ---------------------------------------------------------
 # 長水路・短水路でデータを分割
