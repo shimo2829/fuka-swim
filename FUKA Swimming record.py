@@ -225,6 +225,10 @@ elif event == "ブレ":
 else:
     distance_list = sorted(data["距離"].unique())
 
+# event が変わったら距離もリセット
+if "selected_distance" not in st.session_state or st.session_state.get("last_event") != event:
+    st.session_state["selected_distance"] = distance_list[0]
+
 distance = st.selectbox(
     "距離を選択してください",
     distance_list,
@@ -232,7 +236,7 @@ distance = st.selectbox(
 )
 
 st.session_state["selected_distance"] = distance
-distance = st.session_state.get("selected_distance", distance)
+st.session_state["last_event"] = event
 
 # ---------------------------------------------------------
 # 固定ヘッダー（色も event に連動）
