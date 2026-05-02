@@ -226,19 +226,17 @@ else:
 distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
-# ★ Streamlit 最上位に固定ヘッダー
+# ★ Streamlit 最上位に固定ヘッダー（完全修正版）
 # ---------------------------------------------------------
 st.markdown(
     f"""
     <style>
+        /* ヘッダー分の余白を確保 */
         .stAppViewContainer {{
             padding-top: 180px !important;
         }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
+        /* 固定ヘッダー本体 */
         .fixed-header {{
             position: fixed;
             top: 0;
@@ -249,12 +247,14 @@ st.markdown(
             border-bottom: 2px solid #ddd;
             z-index: 1000000;
         }}
+
         .header-title {{
             font-size: 28px;
             font-weight: 700;
             margin: 0;
             color: #000;
         }}
+
         .header-sub {{
             font-size: 20px;
             font-weight: 600;
