@@ -173,7 +173,7 @@ if local_excel is None:
 event_list = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 event = st.session_state.get("selected_event", "フリー")
 
-# ② selectbox の描画（←ここが最重要）
+# ② selectbox（←ここが本当に重要）
 event = st.selectbox(
     "種目を選択してください",
     event_list,
