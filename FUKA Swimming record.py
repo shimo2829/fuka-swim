@@ -172,8 +172,7 @@ if local_excel is None:
 
 event_list = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 
-# ① new_event の反映（最優先）
-#   selectbox より前に session_state を確定させる
+# ① rerun の最初に session_state を確定（←最重要）
 if "selected_event" not in st.session_state:
     st.session_state["selected_event"] = "フリー"
 
@@ -187,8 +186,9 @@ event = st.selectbox(
     key=f"event_selector_force_{st.session_state['selected_event']}"
 )
 
-# ③ 選んだ event を即反映（←ここが最重要）
+# ③ 選んだ event を即反映
 st.session_state["selected_event"] = event
+
 
 # ---------------------------------------------------------
 # 種目カラー
