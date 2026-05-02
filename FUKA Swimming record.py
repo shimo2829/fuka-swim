@@ -483,9 +483,15 @@ else:
 st.subheader("新しい記録を追加")
 
 with st.form("add_record_form"):
-    with st.form("add_record_form"):
 
-      if new_event == "メドレー":
+    # ★ 種目選択（上の UI と同じ）
+    new_event = st.selectbox(
+        "種目を選択してください",
+        ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
+    )
+
+    # ★ 種目ごとの距離リスト（上の UI と同じロジック）
+    if new_event == "メドレー":
         new_distance_list = [200, 400]
     elif new_event == "ブレ":
         new_distance_list = [50, 100]
@@ -496,7 +502,6 @@ with st.form("add_record_form"):
 
     new_date = st.date_input("日付")
     new_grade = st.selectbox("学年", ["小5", "小6", "中1", "中2", "中3"])
-    new_distance = st.selectbox("距離", distance_list)
     new_course = st.selectbox("長水路 or 短水路", ["長水路", "短水路"])
     new_time_str = st.text_input(
         "タイム（入力方法）\n\n"
@@ -524,21 +529,22 @@ if submitted:
         }])
 
         try:
-            book = pd.read_excel(local_excel, sheet_name=sheet_name)
+            # ★ 保存先シートは new_event（選んだ種目）
+            book = pd.read_excel(local_excel, sheet_name=new_event)
             book = normalize_columns(book)
             book = book.iloc[:, :6]
             book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
 
             updated = pd.concat([book, new_row], ignore_index=True)
 
-            save_sheet_without_deleting_others(local_excel, sheet_name, updated)
+            save_sheet_without_deleting_others(local_excel, new_event, updated)
 
             update_excel_to_github(
                 local_path=local_excel,
                 repo=GITHUB_REPO,
                 file_path=GITHUB_FILE_PATH,
                 token=GITHUB_TOKEN,
-                commit_message=f"Add record: {event} {distance}m"
+                commit_message=f"Add record: {new_event} {new_distance}m"
             )
 
             st.success("記録を追加しました！（GitHub にも反映済み）")
