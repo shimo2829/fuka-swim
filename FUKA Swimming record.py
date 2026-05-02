@@ -168,14 +168,12 @@ local_excel = download_excel_from_github(GITHUB_REPO, GITHUB_FILE_PATH, GITHUB_T
 
 if local_excel is None:
     st.stop()
+
 # ---------------------------------------------------------
-# 種目選択（①）
+# 種目選択（session_state で管理）
 # ---------------------------------------------------------
 events = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
-
-# ★ ここを session_state にする（最重要）
 event = st.session_state.get("selected_event", "フリー")
-
 # ---------------------------------------------------------
 # 種目カラー
 # ---------------------------------------------------------
@@ -228,17 +226,14 @@ else:
 distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
-# ★ Streamlit 最上位に固定ヘッダーを強制表示する完全版
+# ★ Streamlit 最上位に固定ヘッダー
 # ---------------------------------------------------------
 st.markdown(
     f"""
     <style>
-        /* Streamlit 全体の最上位に余白を作る */
         .stAppViewContainer {{
             padding-top: 130px !important;
         }}
-
-        /* 固定ヘッダー本体 */
         .fixed-header {{
             position: fixed;
             top: 0;
@@ -247,22 +242,18 @@ st.markdown(
             background-color: white;
             padding: 20px 30px;
             border-bottom: 2px solid #ddd;
-            z-index: 1000000; /* ← 最上位に強制 */
+            z-index: 1000000;
         }}
-
         .header-title {{
             font-size: 28px;
             font-weight: 700;
             margin: 0;
-            padding: 0;
             color: #000;
         }}
-
         .header-sub {{
             font-size: 20px;
             font-weight: 600;
             margin: 0;
-            padding: 0;
             color: {title_color};
         }}
     </style>
@@ -274,7 +265,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 
 # ---------------------------------------------------------
 # 長水路／短水路
@@ -339,6 +329,7 @@ series_data = [
     }
     for i in range(len(y_data))
 ]
+
 # ---------------------------------------------------------
 # Y軸フォーマッタ
 # ---------------------------------------------------------
@@ -363,7 +354,6 @@ options = {
         "data": ["長水路", "短水路"],
         "textStyle": {"color": "#000"}
     },
-
     "tooltip": {
         "trigger": "axis",
         "formatter": JsCode("""
@@ -372,49 +362,19 @@ options = {
             }
         """)
     },
-
-    "xAxis": {
-        "type": "category",
-        "data": x_data
-    },
-
+    "xAxis": {"type": "category", "data": x_data},
     "yAxis": {
         "type": "value",
         "inverse": False,
         "min": y_min,
         "max": y_max,
         "interval": y_interval,
-        "axisLabel": {
-            "formatter": y_axis_formatter
-        }
+        "axisLabel": {"formatter": y_axis_formatter}
     },
-
-    "dataZoom": [
-        {"type": "inside"},
-        {"type": "slider"}
-    ],
-
+    "dataZoom": [{"type": "inside"}, {"type": "slider"}],
     "series": [
-        {
-            "name": "長水路",
-            "type": "line",
-            "data": [],
-            "lineStyle": {"color": "#3366FF"},
-            "itemStyle": {"color": "#3366FF"},
-            "showSymbol": True,
-            "symbol": "circle",
-            "symbolSize": 12
-        },
-        {
-            "name": "短水路",
-            "type": "line",
-            "data": [],
-            "lineStyle": {"color": "#FF3333"},
-            "itemStyle": {"color": "#FF3333"},
-            "showSymbol": True,
-            "symbol": "circle",
-            "symbolSize": 12
-        },
+        {"name": "長水路", "type": "line", "data": [], "lineStyle": {"color": "#3366FF"}},
+        {"name": "短水路", "type": "line", "data": [], "lineStyle": {"color": "#FF3333"}},
         {
             "type": "line",
             "data": series_data,
@@ -430,12 +390,10 @@ options = {
     ]
 }
 
-
 # ---------------------------------------------------------
 # グラフ描画
 # ---------------------------------------------------------
 st_echarts(options=options, height="500px")
-
 # ---------------------------------------------------------
 # 最新記録
 # ---------------------------------------------------------
@@ -486,13 +444,13 @@ st.subheader("新しい記録を追加")
 
 with st.form("add_record_form"):
 
-    # ★ 種目選択（上の UI と同じ）
+    # ★ 種目選択（ここがページ全体の event に反映される）
     new_event = st.selectbox(
         "種目を選択してください",
         ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
     )
 
-    # ★ 種目ごとの距離リスト（上の UI と同じロジック）
+    # ★ 種目ごとの距離リスト
     if new_event == "メドレー":
         new_distance_list = [200, 400]
     elif new_event == "ブレ":
@@ -548,7 +506,7 @@ if submitted:
                 commit_message=f"Add record: {new_event} {new_distance}m"
             )
 
-            # ★★★ ここに追加（最重要） ★★★
+            # ★★★ ページ全体の event を new_event に切り替える ★★★
             st.session_state["selected_event"] = new_event
 
             st.success("記録を追加しました！（GitHub にも反映済み）")
@@ -556,7 +514,6 @@ if submitted:
 
         except Exception as e:
             st.error(f"Excel 書き込みエラー: {e}")
-
 
 # ---------------------------------------------------------
 # 記録の修正・削除
