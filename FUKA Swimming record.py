@@ -529,7 +529,6 @@ if submitted:
         }])
 
         try:
-            # ★ 保存先シートは new_event（選んだ種目）
             book = pd.read_excel(local_excel, sheet_name=new_event)
             book = normalize_columns(book)
             book = book.iloc[:, :6]
@@ -547,11 +546,15 @@ if submitted:
                 commit_message=f"Add record: {new_event} {new_distance}m"
             )
 
+            # ★★★ ここに追加（最重要） ★★★
+            st.session_state["selected_event"] = new_event
+
             st.success("記録を追加しました！（GitHub にも反映済み）")
             st.rerun()
 
         except Exception as e:
             st.error(f"Excel 書き込みエラー: {e}")
+
 
 # ---------------------------------------------------------
 # 記録の修正・削除
