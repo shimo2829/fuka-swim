@@ -174,9 +174,9 @@ if local_excel is None:
 # ---------------------------------------------------------
 
 # ① session_state から event を読む
-# ★ ページ上部の種目選択（正しい順番）
 event = st.session_state.get("selected_event", "フリー")
 
+# ② selectbox を描画
 event = st.selectbox(
     "種目を選択してください",
     ["フリー", "バッタ", "ブレ", "バック", "メドレー"],
@@ -184,31 +184,8 @@ event = st.selectbox(
     key="event_selector"
 )
 
+# ③ 選んだ event を保存
 st.session_state["selected_event"] = event
-
-# ---------------------------------------------------------
-# 種目カラー
-# ---------------------------------------------------------
-event_colors = {
-    "フリー": "#1E90FF",
-    "バッタ": "#FF8C00",
-    "ブレ":   "#32CD32",
-    "バック": "#8A2BE2",
-    "メドレー": "#DC143C"
-}
-title_color = event_colors.get(event, "#000000")
-
-# ---------------------------------------------------------
-# 種目 → 英語（ブレだけカタカナ）
-# ---------------------------------------------------------
-event_english = {
-    "フリー": "Free",
-    "バッタ": "Butterfly",
-    "バック": "Backstroke",
-    "メドレー": "Medley",
-    "ブレ": "ブレ"
-}
-event_en = event_english.get(event, event)
 
 # ---------------------------------------------------------
 # Excel 読み込み（距離選択より前に必ず実行）
@@ -226,7 +203,7 @@ data = data.dropna(subset=["距離"])
 data["距離"] = data["距離"].astype(int)
 
 # ---------------------------------------------------------
-# 距離選択（Excel 読み込み後に実行）
+# 距離選択
 # ---------------------------------------------------------
 if event == "メドレー":
     distance_list = [200, 400]
@@ -235,19 +212,14 @@ elif event == "ブレ":
 else:
     distance_list = sorted(data["距離"].unique())
 
-# ---------------------------------------------------------
-# 距離選択（Excel 読み込み後に実行）
-# ---------------------------------------------------------
 distance = st.selectbox("距離を選択してください", distance_list)
 
-# ★ rerun 対策：distance を保存
+# rerun 対策
 st.session_state["selected_distance"] = distance
-
-# ★ rerun 後の復元
 distance = st.session_state.get("selected_distance", distance)
 
 # ---------------------------------------------------------
-# ★ Streamlit 最上位に固定ヘッダー（完全修正版）
+# 固定ヘッダー
 # ---------------------------------------------------------
 st.markdown(
     f"""
@@ -275,7 +247,7 @@ st.markdown(
             font-size: 20px;
             font-weight: 600;
             margin: 0;
-            color: {title_color};
+            color: #000;
         }}
     </style>
 
@@ -310,7 +282,7 @@ if filtered.empty:
     st.stop()
 
 # ---------------------------------------------------------
-# ECharts 用データ準備
+# グラフ描画
 # ---------------------------------------------------------
 filtered["日付_学年"] = (
     filtered["日付"].dt.strftime("%Y-%m-%d") + "（" + filtered["学年"] + "）"
@@ -322,9 +294,6 @@ x_data = filtered["日付_学年"].tolist()
 y_data = filtered["タイム"].tolist()
 y_label = filtered["タイム_表示"].tolist()
 
-# ---------------------------------------------------------
-# Y軸レンジ
-# ---------------------------------------------------------
 y_min_raw = min(y_data)
 y_max_raw = max(y_data)
 
@@ -337,9 +306,6 @@ else:
     y_max = math.ceil(y_max_raw / 2) * 2
     y_interval = 2
 
-# ---------------------------------------------------------
-# 点の色分け
-# ---------------------------------------------------------
 series_data = [
     {
         "value": y_data[i],
@@ -351,23 +317,6 @@ series_data = [
     for i in range(len(y_data))
 ]
 
-# ---------------------------------------------------------
-# Y軸フォーマッタ
-# ---------------------------------------------------------
-if "メドレー" in event:
-    y_axis_formatter = JsCode("""
-        function (value) {
-            var min = Math.floor(value / 60);
-            var sec = value % 60;
-            return min + "'" + sec.toFixed(2).padStart(5, '0');
-        }
-    """)
-else:
-    y_axis_formatter = "{value}"
-
-# ---------------------------------------------------------
-# ECharts オプション
-# ---------------------------------------------------------
 options = {
     "legend": {
         "top": 0,
@@ -390,7 +339,7 @@ options = {
         "min": y_min,
         "max": y_max,
         "interval": y_interval,
-        "axisLabel": {"formatter": y_axis_formatter}
+        "axisLabel": {"formatter": "{value}"}
     },
     "dataZoom": [{"type": "inside"}, {"type": "slider"}],
     "series": [
@@ -411,52 +360,7 @@ options = {
     ]
 }
 
-# ---------------------------------------------------------
-# グラフ描画
-# ---------------------------------------------------------
 st_echarts(options=options, height="500px")
-# ---------------------------------------------------------
-# 最新記録
-# ---------------------------------------------------------
-latest = filtered.iloc[-1]
-
-st.subheader("最新の記録")
-st.write(f"日付：{latest['日付']}")
-st.write(f"タイム：{seconds_to_swim_format(latest['タイム'])}")
-st.write(f"会場：{latest['会場']}")
-
-# ---------------------------------------------------------
-# ベストタイム
-# ---------------------------------------------------------
-best_short = data[
-    (data["距離"] == distance) &
-    (data["長水路or短水路"] == "短水路") &
-    (data["タイム"].notna())
-]
-
-best_long = data[
-    (data["距離"] == distance) &
-    (data["長水路or短水路"] == "長水路") &
-    (data["タイム"].notna())
-]
-
-st.subheader("ベストタイム（短水路）")
-if not best_short.empty:
-    t = best_short["タイム"].min()
-    d = best_short.loc[best_short["タイム"].idxmin(), "日付"]
-    st.write(f"ベストタイム：**{seconds_to_swim_format(t)}**")
-    st.write(f"更新日：{d}")
-else:
-    st.write("データなし")
-
-st.subheader("ベストタイム（長水路）")
-if not best_long.empty:
-    t = best_long["タイム"].min()
-    d = best_long.loc[best_long["タイム"].idxmin(), "日付"]
-    st.write(f"ベストタイム：**{seconds_to_swim_format(t)}**")
-    st.write(f"更新日：{d}")
-else:
-    st.write("データなし")
 
 # ---------------------------------------------------------
 # 新しい記録を追加
@@ -465,13 +369,12 @@ st.subheader("新しい記録を追加")
 
 with st.form("add_record_form"):
 
-    # ★ 種目選択（ここがページ全体の event に反映される）
     new_event = st.selectbox(
         "種目を選択してください",
-        ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
+        ["フリー", "バッタ", "ブレ", "バック", "メドレー"],
+        key="new_event_selector"
     )
 
-    # ★ 種目ごとの距離リスト
     if new_event == "メドレー":
         new_distance_list = [200, 400]
     elif new_event == "ブレ":
@@ -484,12 +387,7 @@ with st.form("add_record_form"):
     new_date = st.date_input("日付")
     new_grade = st.selectbox("学年", ["小5", "小6", "中1", "中2", "中3"])
     new_course = st.selectbox("長水路 or 短水路", ["長水路", "短水路"])
-    new_time_str = st.text_input(
-        "タイム（入力方法）\n\n"
-        "【60秒未満】例：58秒11 → 58.11\n"
-        "【60秒以上】例：1分41秒58 → 1'41\"58\n\n"
-        "※ どちらの形式でも自動で変換されます"
-    )
+    new_time_str = st.text_input("タイム")
     new_place = st.text_input("会場", value="菰野スイミング")
 
     submitted = st.form_submit_button("追加する")
@@ -527,33 +425,8 @@ if submitted:
                 commit_message=f"Add record: {new_event} {new_distance}m"
             )
 
-            # ★★★ ページ全体の event を new_event に切り替える ★★★
             st.session_state["selected_event"] = new_event
-
-            st.success("記録を追加しました！（GitHub にも反映済み）")
             st.rerun()
 
         except Exception as e:
             st.error(f"Excel 書き込みエラー: {e}")
-
-# ---------------------------------------------------------
-# 記録の修正・削除
-# ---------------------------------------------------------
-st.subheader("記録の修正・削除")
-
-edit_df = filtered.copy().reset_index(drop=True)
-edit_df["行番号"] = edit_df.index
-
-st.dataframe(edit_df[["行番号", "日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]])
-
-target_index = st.number_input(
-    "修正・削除する行番号を入力",
-    min_value=0,
-    max_value=len(edit_df)-1,
-    step=1
-)
-
-target_row = edit_df.iloc[target_index]
-
-st.write("選択中の記録：")
-st.write(target_row)
