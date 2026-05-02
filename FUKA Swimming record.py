@@ -169,8 +169,13 @@ if local_excel is None:
 # ---------------------------------------------------------
 # ★ ページ上部の種目選択（session_state 連動）
 # ---------------------------------------------------------
-event = st.session_state.get("selected_event", "フリー")
+# ① new_event の反映（最優先）
+if "selected_event" in st.session_state:
+    event = st.session_state["selected_event"]
+else:
+    event = "フリー"
 
+# ② selectbox の描画
 event = st.selectbox(
     "種目を選択してください",
     ["フリー", "バッタ", "ブレ", "バック", "メドレー"],
@@ -178,6 +183,7 @@ event = st.selectbox(
     key="event_selector"
 )
 
+# ③ 選んだ event を保存
 st.session_state["selected_event"] = event
 
 # ---------------------------------------------------------
