@@ -234,6 +234,11 @@ st.markdown(
         .stAppViewContainer {{
             padding-top: 180px !important;
         }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
         .fixed-header {{
             position: fixed;
             top: 0;
