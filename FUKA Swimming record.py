@@ -495,7 +495,6 @@ with st.expander("＋ 記録の修正・削除（クリックで開く）"):
     # -------------------------
     with st.form("edit_form"):
 
-        # 学年リスト（統一版）
         grade_list = ["小1","小2","小3","小4","小5","小6","中1","中2","中3"]
 
         e_date = st.date_input("日付（修正）", value=target_row["日付"])
@@ -530,8 +529,9 @@ with st.expander("＋ 記録の修正・削除（クリックで開く）"):
             book = book.iloc[:, :6]
             book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
 
-            # target_row.name は元の index
-            book.loc[target_row.name] = [
+            real_index = filtered.index[target_index]
+
+            book.loc[real_index] = [
                 pd.to_datetime(e_date),
                 e_grade,
                 int(e_distance),
@@ -552,3 +552,35 @@ with st.expander("＋ 記録の修正・削除（クリックで開く）"):
 
             st.success("修正しました！（GitHub にも反映済み）")
             st.rerun()
+
+    # -------------------------
+    # 削除ボタン
+    # -------------------------
+    if st.button("この記録を削除する", type="primary"):
+
+        try:
+            book = pd.read_excel(local_excel, sheet_name=sheet_name)
+            book = normalize_columns(book)
+            book = book.iloc[:, :6]
+            book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
+
+            real_index = filtered.index[target_index]
+
+            # 行削除
+            book = book.drop(real_index).reset_index(drop=True)
+
+            save_sheet_without_deleting_others(local_excel, sheet_name, book)
+
+            update_excel_to_github(
+                local_path=local_excel,
+                repo=GITHUB_REPO,
+                file_path=GITHUB_FILE_PATH,
+                token=GITHUB_TOKEN,
+                commit_message=f"Delete record: {event} {distance}m"
+            )
+
+            st.success("削除しました！（GitHub にも反映済み）")
+            st.rerun()
+
+        except Exception as e:
+            st.error(f"削除中にエラーが発生しました: {e}")
