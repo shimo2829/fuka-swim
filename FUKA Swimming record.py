@@ -231,9 +231,9 @@ distance = st.selectbox("距離を選択してください", distance_list)
 st.markdown(
     f"""
     <style>
-        /* Streamlit 全体の最上位に余白を作る */
+        /* Streamlit 全体の最上位に余白を作る（これが最重要） */
         .stApp {{
-            padding-top: 120px !important;
+            padding-top: 130px !important;
         }}
 
         /* 固定ヘッダー本体 */
@@ -243,24 +243,25 @@ st.markdown(
             left: 0;
             width: 100%;
             background-color: white;
-            padding: 18px 25px;
+            padding: 20px 30px;
             border-bottom: 2px solid #ddd;
-            z-index: 99999;  /* ← 最上位にするために強化 */
+            z-index: 100000; /* ← 最上位に強制 */
         }}
 
         .header-title {{
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 700;
             margin: 0;
             padding: 0;
+            color: #000;
         }}
 
         .header-sub {{
             font-size: 20px;
             font-weight: 600;
-            color: {title_color};
             margin: 0;
             padding: 0;
+            color: {title_color};
         }}
     </style>
 
