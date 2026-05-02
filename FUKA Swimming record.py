@@ -326,17 +326,6 @@ else:
     y_max = math.ceil(y_max_raw / 2) * 2
     y_interval = 2
 
-series_data = [
-    {
-        "value": y_data[i],
-        "label": y_label[i],
-        "itemStyle": {
-            "color": "#3366FF" if filtered["長水路or短水路"].iloc[i] == "長水路" else "#FF3333"
-        }
-    }
-    for i in range(len(y_data))
-]
-
 # ---------------------------------------------------------
 # 長水路・短水路でデータを分割
 # ---------------------------------------------------------
@@ -353,7 +342,9 @@ for i in range(len(y_data)):
     else:
         short_series.append(row)
 
-
+# ---------------------------------------------------------
+# ECharts options（完全版）
+# ---------------------------------------------------------
 options = {
     "legend": {
         "top": 0,
@@ -379,36 +370,25 @@ options = {
         "axisLabel": {"formatter": "{value}"}
     },
     "dataZoom": [{"type": "inside"}, {"type": "slider"}],
-  "series": [
-    {
-        "name": "長水路",
-        "type": "line",
-        "data": long_series,
-        "lineStyle": {"color": "#3366FF"},
-        "itemStyle": {"color": "#3366FF"}
-    },
-    {
-        "name": "短水路",
-        "type": "line",
-        "data": short_series,
-        "lineStyle": {"color": "#FF3333"},
-        "itemStyle": {"color": "#FF3333"}
-    }
-]
 
-    {
-        "type": "line",
-        "data": series_data,
-        "smooth": False,
-        "lineStyle": {"color": "gray", "width": 2},
-        "label": {
-            "show": True,
-            "position": "top",
-            "formatter": JsCode("function (p) { return p.data.label; }"),
-            "fontSize": 12
+    # ★★★ 完全に正しい series（ここが重要） ★★★
+    "series": [
+        {
+            "name": "長水路",
+            "type": "line",
+            "data": long_series,
+            "lineStyle": {"color": "#3366FF"},
+            "itemStyle": {"color": "#3366FF"}
+        },
+        {
+            "name": "短水路",
+            "type": "line",
+            "data": short_series,
+            "lineStyle": {"color": "#FF3333"},
+            "itemStyle": {"color": "#FF3333"}
         }
-    }
-]
+    ]
+}
 
 # ---------------------------------------------------------
 # 新しい記録を追加（折りたたみ）
