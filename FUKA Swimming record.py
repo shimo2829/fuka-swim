@@ -30,7 +30,7 @@ if not st.session_state.authenticated:
 # ページ設定
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="FUKA Swimming Record",
+    page_title="FUKA Swimming Records",
     layout="wide"
 )
 
@@ -232,7 +232,7 @@ st.markdown(
     f"""
     <style>
         .stAppViewContainer {{
-            padding-top: 130px !important;
+            padding-top: 180px !important;
         }}
         .fixed-header {{
             position: fixed;
