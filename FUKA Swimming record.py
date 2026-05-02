@@ -200,6 +200,18 @@ event_english = {
 event_en = event_english.get(event, event)
 
 # ---------------------------------------------------------
+# 距離選択
+# ---------------------------------------------------------
+if event == "メドレー":
+    distance_list = [200, 400]
+elif event == "ブレ":
+    distance_list = [50, 100]
+else:
+    distance_list = sorted(data["距離"].unique())
+
+distance = st.selectbox("距離を選択してください", distance_list)
+
+# ---------------------------------------------------------
 # ★ 固定ヘッダー（ページ最上部に固定） ← ここを丸ごと置き換え
 # ---------------------------------------------------------
 st.markdown(
@@ -256,18 +268,6 @@ data["タイム"] = data["タイム"].apply(time_to_seconds)
 data["距離"] = pd.to_numeric(data["距離"], errors="coerce")
 data = data.dropna(subset=["距離"])
 data["距離"] = data["距離"].astype(int)
-
-# ---------------------------------------------------------
-# 距離選択
-# ---------------------------------------------------------
-if event == "メドレー":
-    distance_list = [200, 400]
-elif event == "ブレ":
-    distance_list = [50, 100]
-else:
-    distance_list = sorted(data["距離"].unique())
-
-distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
 # 長水路／短水路
