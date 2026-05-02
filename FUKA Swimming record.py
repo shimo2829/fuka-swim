@@ -483,6 +483,17 @@ else:
 st.subheader("新しい記録を追加")
 
 with st.form("add_record_form"):
+    with st.form("add_record_form"):
+
+      if new_event == "メドレー":
+        new_distance_list = [200, 400]
+    elif new_event == "ブレ":
+        new_distance_list = [50, 100]
+    else:
+        new_distance_list = sorted(data["距離"].unique())
+
+    new_distance = st.selectbox("距離を選択してください", new_distance_list)
+
     new_date = st.date_input("日付")
     new_grade = st.selectbox("学年", ["小5", "小6", "中1", "中2", "中3"])
     new_distance = st.selectbox("距離", distance_list)
