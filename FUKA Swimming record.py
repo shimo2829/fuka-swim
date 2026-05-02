@@ -383,6 +383,90 @@ options = {
 st_echarts(options=options, height="500px")
 
 # ---------------------------------------------------------
+# 新しい記録を追加（折りたたみ）
+# ---------------------------------------------------------
+with st.expander("＋ 新しい記録を追加（クリックで開く）"):
+
+    st.subheader("新しい記録を追加")
+
+    with st.form("add_record_form"):
+
+        new_event = st.selectbox(
+            "種目を選択してください",
+            event_list,
+            key="new_event_selector"
+        )
+
+        # new_event 用に距離リストを作る
+        new_data = pd.read_excel(local_excel, sheet_name=new_event)
+        new_data = normalize_columns(new_data)
+        new_data["距離"] = pd.to_numeric(new_data["距離"], errors="coerce")
+        new_data = new_data.dropna(subset=["距離"])
+        new_data["距離"] = new_data["距離"].astype(int)
+
+        if new_event == "メドレー":
+            new_distance_list = [200, 400]
+        elif new_event == "ブレ":
+            new_distance_list = [50, 100]
+        else:
+            new_distance_list = sorted(new_data["距離"].unique())
+
+        new_distance = st.selectbox("距離を選択してください", new_distance_list)
+
+        new_date = st.date_input("日付")
+
+        # 学年リスト（修正フォームと統一）
+        grade_list = ["小1","小2","小3","小4","小5","小6","中1","中2","中3"]
+        new_grade = st.selectbox("学年", grade_list)
+
+        new_course = st.selectbox("長水路 or 短水路", ["長水路", "短水路"])
+        new_time_str = st.text_input("タイム")
+        new_place = st.text_input("会場", value="菰野スイミング")
+
+        submitted = st.form_submit_button("追加する")
+
+    if submitted:
+        new_time_sec = time_to_seconds(new_time_str)
+
+        if new_time_sec is None:
+            st.error("タイムの形式が正しくありません")
+        else:
+            new_row = pd.DataFrame([{
+                "日付": pd.to_datetime(new_date),
+                "学年": new_grade,
+                "距離": int(new_distance),
+                "長水路or短水路": new_course,
+                "タイム": new_time_sec,
+                "会場": new_place
+            }])
+
+            try:
+                book = pd.read_excel(local_excel, sheet_name=new_event)
+                book = normalize_columns(book)
+                book = book.iloc[:, :6]
+                book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
+
+                updated = pd.concat([book, new_row], ignore_index=True)
+
+                save_sheet_without_deleting_others(local_excel, new_event, updated)
+
+                update_excel_to_github(
+                    local_path=local_excel,
+                    repo=GITHUB_REPO,
+                    file_path=GITHUB_FILE_PATH,
+                    token=GITHUB_TOKEN,
+                    commit_message=f"Add record: {new_event} {new_distance}m"
+                )
+
+                st.session_state["selected_event"] = new_event
+
+                st.success("記録を追加しました！（GitHub にも反映済み）")
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Excel 書き込みエラー: {e}")
+
+# ---------------------------------------------------------
 # 記録の修正・削除（折りたたみ）
 # ---------------------------------------------------------
 with st.expander("＋ 記録の修正・削除（クリックで開く）"):
