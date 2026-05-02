@@ -428,17 +428,6 @@ options = {
     ]
 }
 
-# ---------------------------------------------------------
-# HTML タイトル
-# ---------------------------------------------------------
-st.markdown(
-    f"""
-    <h3 style="text-align:center; margin-top:10px; margin-bottom:10px; color:{title_color};">
-        {event} {distance}m（{course}）の記録推移
-    </h3>
-    """,
-    unsafe_allow_html=True
-)
 
 # ---------------------------------------------------------
 # グラフ描画
