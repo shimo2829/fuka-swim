@@ -383,80 +383,147 @@ options = {
 st_echarts(options=options, height="500px")
 
 # ---------------------------------------------------------
-# 新しい記録を追加（完全版）
+# 記録の修正（折りたたみ）
 # ---------------------------------------------------------
-st.subheader("新しい記録を追加")
+with st.expander("＋ 記録の修正（クリックで開く）"):
 
-with st.form("add_record_form"):
+    st.subheader("記録の修正")
 
-    new_event = st.selectbox(
-        "種目を選択してください",
-        event_list,
-        key="new_event_selector"
+    # 修正対象の行を選ぶ
+    edit_index = st.selectbox(
+        "修正する記録を選択してください",
+        list(range(len(filtered))),
+        format_func=lambda i: f"{filtered.iloc[i]['日付'].strftime('%Y-%m-%d')} / {filtered.iloc[i]['距離']}m / {seconds_to_swim_format(filtered.iloc[i]['タイム'])}"
     )
 
-    # new_event 用に距離リストを作る（その種目のシートから）
-    new_data = pd.read_excel(local_excel, sheet_name=new_event)
-    new_data = normalize_columns(new_data)
-    new_data["距離"] = pd.to_numeric(new_data["距離"], errors="coerce")
-    new_data = new_data.dropna(subset=["距離"])
-    new_data["距離"] = new_data["距離"].astype(int)
+    target = filtered.iloc[edit_index]
 
-    if new_event == "メドレー":
-        new_distance_list = [200, 400]
-    elif new_event == "ブレ":
-        new_distance_list = [50, 100]
-    else:
-        new_distance_list = sorted(new_data["距離"].unique())
+    with st.form("edit_record_form"):
 
-    new_distance = st.selectbox("距離を選択してください", new_distance_list)
+        e_date = st.date_input("日付（修正）", value=target["日付"])
+        e_grade = st.selectbox("学年（修正）", ["小5", "小6", "中1", "中2", "中3"], index=["小5","小6","中1","中2","中3"].index(target["学年"]))
+        e_course = st.selectbox("長水路 or 短水路（修正）", ["長水路", "短水路"], index=["長水路","短水路"].index(target["長水路or短水路"]))
+        e_time_str = st.text_input("タイム（修正）", value=seconds_to_swim_format(target["タイム"]))
+        e_place = st.text_input("会場（修正）", value=target["会場"])
 
-    new_date = st.date_input("日付")
-    new_grade = st.selectbox("学年", ["小5", "小6", "中1", "中2", "中3"])
-    new_course = st.selectbox("長水路 or 短水路", ["長水路", "短水路"])
-    new_time_str = st.text_input("タイム")
-    new_place = st.text_input("会場", value="菰野スイミング")
+        edit_submitted = st.form_submit_button("修正する")
 
-    submitted = st.form_submit_button("追加する")
+    if edit_submitted:
 
-if submitted:
-    new_time_sec = time_to_seconds(new_time_str)
+        e_time_sec = time_to_seconds(e_time_str)
 
-    if new_time_sec is None:
-        st.error("タイムの形式が正しくありません")
-    else:
-        new_row = pd.DataFrame([{
-            "日付": pd.to_datetime(new_date),
-            "学年": new_grade,
-            "距離": int(new_distance),
-            "長水路or短水路": new_course,
-            "タイム": new_time_sec,
-            "会場": new_place
-        }])
+        if e_time_sec is None:
+            st.error("タイムの形式が正しくありません")
+        else:
+            try:
+                book = pd.read_excel(local_excel, sheet_name=event)
+                book = normalize_columns(book)
+                book = book.iloc[:, :6]
+                book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
 
-        try:
-            book = pd.read_excel(local_excel, sheet_name=new_event)
+                real_index = filtered.index[edit_index]
+
+                book.loc[real_index, "日付"] = pd.to_datetime(e_date)
+                book.loc[real_index, "学年"] = e_grade
+                book.loc[real_index, "長水路or短水路"] = e_course
+                book.loc[real_index, "タイム"] = e_time_sec
+                book.loc[real_index, "会場"] = e_place
+
+                save_sheet_without_deleting_others(local_excel, event, book)
+
+                update_excel_to_github(
+                    local_path=local_excel,
+                    repo=GITHUB_REPO,
+                    file_path=GITHUB_FILE_PATH,
+                    token=GITHUB_TOKEN,
+                    commit_message=f"Edit record: {event}"
+                )
+
+                st.success("記録を修正しました！（GitHub にも反映済み）")
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Excel 書き込みエラー: {e}")
+
+# ---------------------------------------------------------
+# 記録の修正・削除（折りたたみ）
+# ---------------------------------------------------------
+with st.expander("＋ 記録の修正・削除（クリックで開く）"):
+
+    st.subheader("記録の修正・削除")
+
+    edit_df = filtered.copy().reset_index(drop=True)
+    edit_df["行番号"] = edit_df.index
+
+    st.dataframe(edit_df[["行番号", "日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]])
+
+    target_index = st.number_input(
+        "修正・削除する行番号を入力",
+        min_value=0,
+        max_value=len(edit_df)-1,
+        step=1
+    )
+
+    target_row = edit_df.iloc[target_index]
+
+    st.write("選択中の記録：")
+    st.write(target_row)
+
+    # -------------------------
+    # 修正フォーム
+    # -------------------------
+    with st.form("edit_form"):
+        e_date = st.date_input("日付（修正）", value=target_row["日付"])
+        e_grade = st.selectbox(
+            "学年（修正）",
+            ["小1","小2","小3","小4","小5","小6","中1","中2","中3"],
+            index=["小1","小2","小3","小4","小5","小6","中1","中2","中3"].index(target_row["学年"])
+        )
+        e_distance = st.number_input("距離（修正）", value=int(target_row["距離"]))
+        e_course = st.selectbox(
+            "長水路 or 短水路（修正）",
+            ["長水路", "短水路"],
+            index=0 if target_row["長水路or短水路"] == "長水路" else 1
+        )
+        e_time_str = st.text_input("タイム（修正）", value=seconds_to_swim_format(target_row["タイム"]))
+        e_place = st.text_input("会場（修正）", value=target_row["会場"])
+
+        edit_submitted = st.form_submit_button("修正する")
+
+    # -------------------------
+    # 修正処理
+    # -------------------------
+    if edit_submitted:
+        new_time_sec = time_to_seconds(e_time_str)
+
+        if new_time_sec is None:
+            st.error("タイムの形式が正しくありません")
+        else:
+            book = pd.read_excel(local_excel, sheet_name=sheet_name)
             book = normalize_columns(book)
             book = book.iloc[:, :6]
             book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
 
-            updated = pd.concat([book, new_row], ignore_index=True)
+            # target_row.name は元の index
+            book.loc[target_row.name] = [
+                pd.to_datetime(e_date),
+                e_grade,
+                int(e_distance),
+                e_course,
+                new_time_sec,
+                e_place
+            ]
 
-            save_sheet_without_deleting_others(local_excel, new_event, updated)
+            save_sheet_without_deleting_others(local_excel, sheet_name, book)
 
             update_excel_to_github(
                 local_path=local_excel,
                 repo=GITHUB_REPO,
                 file_path=GITHUB_FILE_PATH,
                 token=GITHUB_TOKEN,
-                commit_message=f"Add record: {new_event} {new_distance}m"
+                commit_message=f"Edit record: {event} {distance}m"
             )
 
-            # ★ ここが最重要：追加した種目に切り替える
-            st.session_state["selected_event"] = new_event
-
-            st.success("記録を追加しました！（GitHub にも反映済み）")
+            st.success("修正しました！（GitHub にも反映済み）")
             st.rerun()
 
-        except Exception as e:
-            st.error(f"Excel 書き込みエラー: {e}")
