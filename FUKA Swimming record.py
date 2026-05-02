@@ -174,16 +174,16 @@ if local_excel is None:
 # ---------------------------------------------------------
 
 # ① session_state から event を読む
+# ★ ページ上部の種目選択（正しい順番）
 event = st.session_state.get("selected_event", "フリー")
 
-# ② selectbox を描画（ここで event を index に使う）
 event = st.selectbox(
     "種目を選択してください",
     ["フリー", "バッタ", "ブレ", "バック", "メドレー"],
-    index=["フリー", "バッタ", "ブレ", "バック", "メドレー"].index(event)
+    index=["フリー", "バッタ", "ブレ", "バック", "メドレー"].index(event),
+    key="event_selector"
 )
 
-# ③ 選んだ event を保存
 st.session_state["selected_event"] = event
 
 # ---------------------------------------------------------
