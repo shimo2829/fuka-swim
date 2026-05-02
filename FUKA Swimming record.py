@@ -453,22 +453,6 @@ options = {
 st_echarts(options=options, height="500px")
 
 # ---------------------------------------------------------
-# 長水路・短水路でデータを分割
-# ---------------------------------------------------------
-long_series = []
-short_series = []
-
-for i in range(len(y_data)):
-    row = {
-        "value": y_data[i],
-        "label": y_label[i]
-    }
-    if filtered["長水路or短水路"].iloc[i] == "長水路":
-        long_series.append(row)
-    else:
-        short_series.append(row)
-
-# ---------------------------------------------------------
 # 新しい記録を追加（折りたたみ）
 # ---------------------------------------------------------
 with st.expander("＋ 新しい記録を追加（クリックで開く）"):
