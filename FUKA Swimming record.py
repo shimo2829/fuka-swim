@@ -226,13 +226,13 @@ else:
 distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
-# ★ 完全修正版：ページ最上部に固定されるヘッダー
+# ★ Streamlit 最上位に固定ヘッダーを強制表示する完全版
 # ---------------------------------------------------------
 st.markdown(
     f"""
     <style>
-        /* Streamlit 全体の最上位に余白を作る（これが最重要） */
-        .stApp {{
+        /* Streamlit 全体の最上位に余白を作る */
+        .stAppViewContainer {{
             padding-top: 130px !important;
         }}
 
@@ -245,7 +245,7 @@ st.markdown(
             background-color: white;
             padding: 20px 30px;
             border-bottom: 2px solid #ddd;
-            z-index: 100000; /* ← 最上位に強制 */
+            z-index: 1000000; /* ← 最上位に強制 */
         }}
 
         .header-title {{
@@ -272,6 +272,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 # ---------------------------------------------------------
 # 長水路／短水路
