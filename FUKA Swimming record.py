@@ -200,7 +200,22 @@ event_english = {
 event_en = event_english.get(event, event)
 
 # ---------------------------------------------------------
-# 距離選択
+# Excel 読み込み（ここが距離選択より前）
+# ---------------------------------------------------------
+sheet_name = event
+
+data = pd.read_excel(local_excel, sheet_name=sheet_name)
+data = data.iloc[:, :6]
+data.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
+data = normalize_columns(data)
+
+data["タイム"] = data["タイム"].apply(time_to_seconds)
+data["距離"] = pd.to_numeric(data["距離"], errors="coerce")
+data = data.dropna(subset=["距離"])
+data["距離"] = data["距離"].astype(int)
+
+# ---------------------------------------------------------
+# 距離選択（Excel 読み込み後に実行）
 # ---------------------------------------------------------
 if event == "メドレー":
     distance_list = [200, 400]
@@ -212,7 +227,7 @@ else:
 distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
-# ★ 固定ヘッダー（ページ最上部に固定） ← ここを丸ごと置き換え
+# ★ 固定ヘッダー（ページ最上部に固定）
 # ---------------------------------------------------------
 st.markdown(
     f"""
@@ -240,7 +255,6 @@ st.markdown(
             margin: 0;
             padding: 0;
         }}
-        /* ヘッダー分の余白を下に追加 */
         .block-container {{
             padding-top: 120px !important;
         }}
@@ -253,6 +267,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 # ---------------------------------------------------------
 # Excel 読み込み（ここから下はそのまま）
