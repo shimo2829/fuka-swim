@@ -228,6 +228,12 @@ else:
 # ---------------------------------------------------------
 distance = st.selectbox("距離を選択してください", distance_list)
 
+# ★ rerun 対策：distance を保存
+st.session_state["selected_distance"] = distance
+
+# ★ rerun 後の復元
+distance = st.session_state.get("selected_distance", distance)
+
 # ---------------------------------------------------------
 # ★ Streamlit 最上位に固定ヘッダー（完全修正版）
 # ---------------------------------------------------------
