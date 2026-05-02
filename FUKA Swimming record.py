@@ -47,7 +47,6 @@ GITHUB_FILE_PATH = st.secrets["GITHUB_FILE_PATH"]
 def download_excel_from_github(repo, file_path, token, local_path="temp.xlsx"):
     url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
     headers = {"Authorization": f"token {token}"}
-
     res = requests.get(url, headers=headers)
     if res.status_code == 200:
         content = base64.b64decode(res.json()["content"])
@@ -63,7 +62,6 @@ def download_excel_from_github(repo, file_path, token, local_path="temp.xlsx"):
 # ---------------------------------------------------------
 def update_excel_to_github(local_path, repo, file_path, token, commit_message="Update Excel"):
     url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
-
     with open(local_path, "rb") as f:
         content = f.read()
     encoded = base64.b64encode(content).decode()
@@ -165,18 +163,14 @@ def seconds_to_swim_format(sec):
 # Excel 読み込み
 # ---------------------------------------------------------
 local_excel = download_excel_from_github(GITHUB_REPO, GITHUB_FILE_PATH, GITHUB_TOKEN)
-
 if local_excel is None:
     st.stop()
 
 # ---------------------------------------------------------
-# ★ ページ上部の種目選択（正しい順番）
+# ★ ページ上部の種目選択（session_state 連動）
 # ---------------------------------------------------------
-
-# ① session_state から event を読む
 event = st.session_state.get("selected_event", "フリー")
 
-# ② selectbox を描画
 event = st.selectbox(
     "種目を選択してください",
     ["フリー", "バッタ", "ブレ", "バック", "メドレー"],
@@ -184,8 +178,19 @@ event = st.selectbox(
     key="event_selector"
 )
 
-# ③ 選んだ event を保存
 st.session_state["selected_event"] = event
+
+# ---------------------------------------------------------
+# 種目カラー
+# ---------------------------------------------------------
+event_colors = {
+    "フリー": "#1E90FF",
+    "バッタ": "#FF8C00",
+    "ブレ":   "#32CD32",
+    "バック": "#8A2BE2",
+    "メドレー": "#DC143C"
+}
+title_color = event_colors.get(event, "#000000")
 
 # ---------------------------------------------------------
 # Excel 読み込み（距離選択より前に必ず実行）
@@ -212,14 +217,13 @@ elif event == "ブレ":
 else:
     distance_list = sorted(data["距離"].unique())
 
-distance = st.selectbox("距離を選択してください", distance_list)
+distance = st.selectbox("距離を選択してください", distance_list, key="distance_selector")
 
-# rerun 対策
 st.session_state["selected_distance"] = distance
 distance = st.session_state.get("selected_distance", distance)
 
 # ---------------------------------------------------------
-# 固定ヘッダー
+# 固定ヘッダー（色も event に連動）
 # ---------------------------------------------------------
 st.markdown(
     f"""
@@ -247,7 +251,7 @@ st.markdown(
             font-size: 20px;
             font-weight: 600;
             margin: 0;
-            color: #000;
+            color: {title_color};
         }}
     </style>
 
@@ -262,7 +266,7 @@ st.markdown(
 # ---------------------------------------------------------
 # 長水路／短水路
 # ---------------------------------------------------------
-course = st.selectbox("長水路／短水路を選択", ["全記録", "短水路", "長水路"])
+course = st.selectbox("長水路／短水路を選択", ["全記録", "短水路", "長水路"], key="course_selector")
 
 # ---------------------------------------------------------
 # データ絞り込み
@@ -282,7 +286,7 @@ if filtered.empty:
     st.stop()
 
 # ---------------------------------------------------------
-# グラフ描画
+# グラフ用データ整形
 # ---------------------------------------------------------
 filtered["日付_学年"] = (
     filtered["日付"].dt.strftime("%Y-%m-%d") + "（" + filtered["学年"] + "）"
@@ -297,7 +301,7 @@ y_label = filtered["タイム_表示"].tolist()
 y_min_raw = min(y_data)
 y_max_raw = max(y_data)
 
-if "メドレー" in event:
+if event == "メドレー":
     y_min = math.floor(y_min_raw / 10) * 10
     y_max = math.ceil(y_max_raw / 10) * 10
     y_interval = 10
@@ -375,12 +379,19 @@ with st.form("add_record_form"):
         key="new_event_selector"
     )
 
+    # new_event 用に距離リストを作る（その種目のシートから）
+    new_data = pd.read_excel(local_excel, sheet_name=new_event)
+    new_data = normalize_columns(new_data)
+    new_data["距離"] = pd.to_numeric(new_data["距離"], errors="coerce")
+    new_data = new_data.dropna(subset=["距離"])
+    new_data["距離"] = new_data["距離"].astype(int)
+
     if new_event == "メドレー":
         new_distance_list = [200, 400]
     elif new_event == "ブレ":
         new_distance_list = [50, 100]
     else:
-        new_distance_list = sorted(data["距離"].unique())
+        new_distance_list = sorted(new_data["距離"].unique())
 
     new_distance = st.selectbox("距離を選択してください", new_distance_list)
 
@@ -426,6 +437,7 @@ if submitted:
             )
 
             st.session_state["selected_event"] = new_event
+            st.success("記録を追加しました！（GitHub にも反映済み）")
             st.rerun()
 
         except Exception as e:
