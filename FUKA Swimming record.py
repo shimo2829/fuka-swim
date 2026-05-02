@@ -383,69 +383,6 @@ options = {
 st_echarts(options=options, height="500px")
 
 # ---------------------------------------------------------
-# 記録の修正（折りたたみ）
-# ---------------------------------------------------------
-with st.expander("＋ 記録の修正（クリックで開く）"):
-
-    st.subheader("記録の修正")
-
-    # 修正対象の行を選ぶ
-    edit_index = st.selectbox(
-        "修正する記録を選択してください",
-        list(range(len(filtered))),
-        format_func=lambda i: f"{filtered.iloc[i]['日付'].strftime('%Y-%m-%d')} / {filtered.iloc[i]['距離']}m / {seconds_to_swim_format(filtered.iloc[i]['タイム'])}"
-    )
-
-    target = filtered.iloc[edit_index]
-
-    with st.form("edit_record_form"):
-
-        e_date = st.date_input("日付（修正）", value=target["日付"])
-        e_grade = st.selectbox("学年（修正）", ["小5", "小6", "中1", "中2", "中3"], index=["小5","小6","中1","中2","中3"].index(target["学年"]))
-        e_course = st.selectbox("長水路 or 短水路（修正）", ["長水路", "短水路"], index=["長水路","短水路"].index(target["長水路or短水路"]))
-        e_time_str = st.text_input("タイム（修正）", value=seconds_to_swim_format(target["タイム"]))
-        e_place = st.text_input("会場（修正）", value=target["会場"])
-
-        edit_submitted = st.form_submit_button("修正する")
-
-    if edit_submitted:
-
-        e_time_sec = time_to_seconds(e_time_str)
-
-        if e_time_sec is None:
-            st.error("タイムの形式が正しくありません")
-        else:
-            try:
-                book = pd.read_excel(local_excel, sheet_name=event)
-                book = normalize_columns(book)
-                book = book.iloc[:, :6]
-                book.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
-
-                real_index = filtered.index[edit_index]
-
-                book.loc[real_index, "日付"] = pd.to_datetime(e_date)
-                book.loc[real_index, "学年"] = e_grade
-                book.loc[real_index, "長水路or短水路"] = e_course
-                book.loc[real_index, "タイム"] = e_time_sec
-                book.loc[real_index, "会場"] = e_place
-
-                save_sheet_without_deleting_others(local_excel, event, book)
-
-                update_excel_to_github(
-                    local_path=local_excel,
-                    repo=GITHUB_REPO,
-                    file_path=GITHUB_FILE_PATH,
-                    token=GITHUB_TOKEN,
-                    commit_message=f"Edit record: {event}"
-                )
-
-                st.success("記録を修正しました！（GitHub にも反映済み）")
-                st.rerun()
-
-            except Exception as e:
-                st.error(f"Excel 書き込みエラー: {e}")
-
-# ---------------------------------------------------------
 # 記録の修正・削除（折りたたみ）
 # ---------------------------------------------------------
 with st.expander("＋ 記録の修正・削除（クリックで開く）"):
@@ -473,11 +410,15 @@ with st.expander("＋ 記録の修正・削除（クリックで開く）"):
     # 修正フォーム
     # -------------------------
     with st.form("edit_form"):
+
+        # 学年リスト（統一版）
+        grade_list = ["小1","小2","小3","小4","小5","小6","中1","中2","中3"]
+
         e_date = st.date_input("日付（修正）", value=target_row["日付"])
         e_grade = st.selectbox(
             "学年（修正）",
-            ["小1","小2","小3","小4","小5","小6","中1","中2","中3"],
-            index=["小1","小2","小3","小4","小5","小6","中1","中2","中3"].index(target_row["学年"])
+            grade_list,
+            index=grade_list.index(target_row["学年"])
         )
         e_distance = st.number_input("距離（修正）", value=int(target_row["距離"]))
         e_course = st.selectbox(
@@ -494,6 +435,7 @@ with st.expander("＋ 記録の修正・削除（クリックで開く）"):
     # 修正処理
     # -------------------------
     if edit_submitted:
+
         new_time_sec = time_to_seconds(e_time_str)
 
         if new_time_sec is None:
@@ -526,4 +468,3 @@ with st.expander("＋ 記録の修正・削除（クリックで開く）"):
 
             st.success("修正しました！（GitHub にも反映済み）")
             st.rerun()
-
