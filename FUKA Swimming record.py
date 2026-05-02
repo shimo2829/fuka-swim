@@ -362,25 +362,34 @@ options = {
         "axisLabel": {"formatter": "{value}"}
     },
     "dataZoom": [{"type": "inside"}, {"type": "slider"}],
-    "series": [
-        {"name": "長水路", "type": "line", "data": [], "lineStyle": {"color": "#3366FF"}},
-        {"name": "短水路", "type": "line", "data": [], "lineStyle": {"color": "#FF3333"}},
-        {
-            "type": "line",
-            "data": series_data,
-            "smooth": False,
-            "lineStyle": {"color": "gray", "width": 2},
-            "label": {
-                "show": True,
-                "position": "top",
-                "formatter": JsCode("function (p) { return p.data.label; }"),
-                "fontSize": 12
-            }
+   "series": [
+    {
+        "name": "長水路",
+        "type": "line",
+        "data": [],
+        "lineStyle": {"color": "#3366FF"},
+        "itemStyle": {"color": "#3366FF"}   # ← これ追加
+    },
+    {
+        "name": "短水路",
+        "type": "line",
+        "data": [],
+        "lineStyle": {"color": "#FF3333"},
+        "itemStyle": {"color": "#FF3333"}   # ← これ追加（凡例も赤になる）
+    },
+    {
+        "type": "line",
+        "data": series_data,
+        "smooth": False,
+        "lineStyle": {"color": "gray", "width": 2},
+        "label": {
+            "show": True,
+            "position": "top",
+            "formatter": JsCode("function (p) { return p.data.label; }"),
+            "fontSize": 12
         }
-    ]
-}
-
-st_echarts(options=options, height="500px")
+    }
+]
 
 # ---------------------------------------------------------
 # 新しい記録を追加（折りたたみ）
