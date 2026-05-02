@@ -245,8 +245,9 @@ st.markdown(
     f"""
     <style>
         .stAppViewContainer {{
-            padding-top: 180px !important;
+            padding-top: 120px !important;
         }}
+
         .fixed-header {{
             position: fixed;
             top: 0;
@@ -257,17 +258,35 @@ st.markdown(
             border-bottom: 2px solid #ddd;
             z-index: 1000000;
         }}
+
         .header-title {{
             font-size: 28px;
             font-weight: 700;
             margin: 0;
             color: #000;
         }}
+
         .header-sub {{
             font-size: 20px;
             font-weight: 600;
             margin: 0;
             color: {title_color};
+        }}
+
+        /* スマホ最適化 */
+        @media screen and (max-width: 600px) {{
+            .fixed-header {{
+                padding: 10px 15px !important;
+            }}
+            .header-title {{
+                font-size: 20px !important;
+            }}
+            .header-sub {{
+                font-size: 14px !important;
+            }}
+            .stAppViewContainer {{
+                padding-top: 90px !important;
+            }}
         }}
     </style>
 
@@ -278,6 +297,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 # ---------------------------------------------------------
 # 長水路／短水路
