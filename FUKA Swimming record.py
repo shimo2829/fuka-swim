@@ -426,55 +426,6 @@ for i in range(len(y_data)):
         short_series.append(row)
 
 # ---------------------------------------------------------
-# ECharts options（完全版）
-# ---------------------------------------------------------
-options = {
-    "legend": {
-        "top": 0,
-        "left": "center",
-        "data": ["長水路", "短水路"],
-        "textStyle": {"color": "#000"}
-    },
-    "tooltip": {
-        "trigger": "axis",
-        "formatter": JsCode("""
-            function (params) {
-                return params[0].data.label;
-            }
-        """)
-    },
-    "xAxis": {"type": "category", "data": x_data},
-    "yAxis": {
-        "type": "value",
-        "inverse": False,
-        "min": y_min,
-        "max": y_max,
-        "interval": y_interval,
-        "axisLabel": {"formatter": "{value}"}
-    },
-    "dataZoom": [{"type": "inside"}, {"type": "slider"}],
-
-    "series": [
-        {
-            "name": "長水路",
-            "type": "line",
-            "data": long_series,
-            "lineStyle": {"color": "#3366FF"},
-            "itemStyle": {"color": "#3366FF"}
-        },
-        {
-            "name": "短水路",
-            "type": "line",
-            "data": short_series,
-            "lineStyle": {"color": "#FF3333"},
-            "itemStyle": {"color": "#FF3333"}
-        }
-    ]
-}
-st_echarts(options=options, height="500px")
-
-
-# ---------------------------------------------------------
 # 新しい記録を追加（折りたたみ）
 # ---------------------------------------------------------
 with st.expander("＋ 新しい記録を追加（クリックで開く）"):
