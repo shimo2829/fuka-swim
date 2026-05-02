@@ -223,8 +223,6 @@ elif event == "ブレ":
 else:
     distance_list = sorted(data["距離"].unique())
 
-distance = st.selectbox("距離を選択してください", distance_list)
-
 # ---------------------------------------------------------
 # ★ Streamlit 最上位に固定ヘッダー（完全修正版）
 # ---------------------------------------------------------
@@ -270,6 +268,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
 # 長水路／短水路
