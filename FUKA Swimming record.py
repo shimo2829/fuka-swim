@@ -351,9 +351,9 @@ else:
 series_data = [
     {
         "value": y_data[i],
-        "label": y_label[i],               // ← 点の上のタイム表示用（残す）
-        "date_grade": x_data[i],           // ← 日付（学年）
-        "place": filtered["会場"].iloc[i], // ← 会場
+        "label": y_label[i],               # 点の上のタイム表示用（残す）
+        "date_grade": x_data[i],           # 日付（学年）
+        "place": filtered["会場"].iloc[i], # 会場
         "itemStyle": {
             "color": "#3366FF" if filtered["長水路or短水路"].iloc[i] == "長水路" else "#FF3333"
         }
