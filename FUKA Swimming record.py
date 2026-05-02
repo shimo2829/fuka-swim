@@ -226,11 +226,17 @@ else:
 distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
-# ★ 固定ヘッダー（ページ最上部に固定）
+# ★ 完全修正版：ページ最上部に固定されるヘッダー
 # ---------------------------------------------------------
 st.markdown(
     f"""
     <style>
+        /* Streamlit 全体の最上位に余白を作る */
+        .stApp {{
+            padding-top: 120px !important;
+        }}
+
+        /* 固定ヘッダー本体 */
         .fixed-header {{
             position: fixed;
             top: 0;
@@ -239,14 +245,16 @@ st.markdown(
             background-color: white;
             padding: 18px 25px;
             border-bottom: 2px solid #ddd;
-            z-index: 9999;
+            z-index: 99999;  /* ← 最上位にするために強化 */
         }}
+
         .header-title {{
             font-size: 26px;
             font-weight: 700;
             margin: 0;
             padding: 0;
         }}
+
         .header-sub {{
             font-size: 20px;
             font-weight: 600;
@@ -254,14 +262,11 @@ st.markdown(
             margin: 0;
             padding: 0;
         }}
-        .block-container {{
-            padding-top: 120px !important;
-        }}
     </style>
 
     <div class="fixed-header">
-        <p class="header-title">FUKA Swimming Records Dashboard</p>
-        <p class="header-sub">{event} {distance}m 記録推移</p>
+        <div class="header-title">FUKA Swimming Records Dashboard</div>
+        <div class="header-sub">{event} {distance}m 記録推移</div>
     </div>
     """,
     unsafe_allow_html=True
