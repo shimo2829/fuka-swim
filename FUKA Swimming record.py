@@ -371,7 +371,7 @@ options = {
 st_echarts(options=options, height="500px")
 
 # ---------------------------------------------------------
-# 新しい記録を追加
+# 新しい記録を追加（完全版）
 # ---------------------------------------------------------
 st.subheader("新しい記録を追加")
 
@@ -379,7 +379,7 @@ with st.form("add_record_form"):
 
     new_event = st.selectbox(
         "種目を選択してください",
-        ["フリー", "バッタ", "ブレ", "バック", "メドレー"],
+        event_list,
         key="new_event_selector"
     )
 
@@ -440,7 +440,9 @@ if submitted:
                 commit_message=f"Add record: {new_event} {new_distance}m"
             )
 
+            # ★ ここが最重要：追加した種目に切り替える
             st.session_state["selected_event"] = new_event
+
             st.success("記録を追加しました！（GitHub にも反映済み）")
             st.rerun()
 
