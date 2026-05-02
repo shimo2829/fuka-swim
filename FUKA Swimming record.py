@@ -168,7 +168,6 @@ local_excel = download_excel_from_github(GITHUB_REPO, GITHUB_FILE_PATH, GITHUB_T
 
 if local_excel is None:
     st.stop()
-
 # ---------------------------------------------------------
 # 種目選択（①）
 # ---------------------------------------------------------
@@ -200,7 +199,7 @@ event_english = {
 event_en = event_english.get(event, event)
 
 # ---------------------------------------------------------
-# Excel 読み込み（ここが距離選択より前）
+# Excel 読み込み（距離選択より前に必ず実行）
 # ---------------------------------------------------------
 sheet_name = event
 
@@ -268,22 +267,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
-# ---------------------------------------------------------
-# Excel 読み込み（ここから下はそのまま）
-# ---------------------------------------------------------
-sheet_name = event
-
-data = pd.read_excel(local_excel, sheet_name=sheet_name)
-data = data.iloc[:, :6]
-data.columns = ["日付", "学年", "距離", "長水路or短水路", "タイム", "会場"]
-data = normalize_columns(data)
-
-data["タイム"] = data["タイム"].apply(time_to_seconds)
-data["距離"] = pd.to_numeric(data["距離"], errors="coerce")
-data = data.dropna(subset=["距離"])
-data["距離"] = data["距離"].astype(int)
-
 # ---------------------------------------------------------
 # 長水路／短水路
 # ---------------------------------------------------------
@@ -347,7 +330,6 @@ series_data = [
     }
     for i in range(len(y_data))
 ]
-
 # ---------------------------------------------------------
 # Y軸フォーマッタ
 # ---------------------------------------------------------
@@ -557,7 +539,7 @@ if submitted:
 
         except Exception as e:
             st.error(f"Excel 書き込みエラー: {e}")
-            
+
 # ---------------------------------------------------------
 # 記録の修正・削除
 # ---------------------------------------------------------
