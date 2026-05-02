@@ -169,29 +169,24 @@ if local_excel is None:
 # ---------------------------------------------------------
 # ★ ページ上部の種目選択（session_state 連動・完全版）
 # ---------------------------------------------------------
-
 event_list = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
 
-# ① rerun の最初に session_state を確定（←最重要）
+# ① rerun の最初に session_state を確定
 if "selected_event" not in st.session_state:
     st.session_state["selected_event"] = "フリー"
 
 event = st.session_state["selected_event"]
 
-# ② selectbox（復元を完全に止める）
+# ② selectbox（key を「event」ではなく「固定文字列」にする）
 event = st.selectbox(
     "種目を選択してください",
     event_list,
     index=event_list.index(event),
-    key=f"event_selector_force_{st.session_state['selected_event']}"
+    key="event_selector"   # ← ここを固定にするのが正解
 )
 
-# ③ 選んだ event を即反映
+# ③ 選んだ event を保存
 st.session_state["selected_event"] = event
-
-st.session_state.clear()
-st.session_state["selected_event"] = new_event
-st.rerun()
 
 # ---------------------------------------------------------
 # 種目カラー
