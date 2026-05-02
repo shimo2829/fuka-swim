@@ -224,17 +224,19 @@ else:
     distance_list = sorted(data["距離"].unique())
 
 # ---------------------------------------------------------
+# 距離選択（Excel 読み込み後に実行）
+# ---------------------------------------------------------
+distance = st.selectbox("距離を選択してください", distance_list)
+
+# ---------------------------------------------------------
 # ★ Streamlit 最上位に固定ヘッダー（完全修正版）
 # ---------------------------------------------------------
 st.markdown(
     f"""
     <style>
-        /* ヘッダー分の余白を確保 */
         .stAppViewContainer {{
             padding-top: 180px !important;
         }}
-
-        /* 固定ヘッダー本体 */
         .fixed-header {{
             position: fixed;
             top: 0;
@@ -245,14 +247,12 @@ st.markdown(
             border-bottom: 2px solid #ddd;
             z-index: 1000000;
         }}
-
         .header-title {{
             font-size: 28px;
             font-weight: 700;
             margin: 0;
             color: #000;
         }}
-
         .header-sub {{
             font-size: 20px;
             font-weight: 600;
@@ -268,7 +268,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-distance = st.selectbox("距離を選択してください", distance_list)
 
 # ---------------------------------------------------------
 # 長水路／短水路
