@@ -167,21 +167,27 @@ if local_excel is None:
     st.stop()
 
 # ---------------------------------------------------------
-# ★ ページ上部の種目選択（session_state 連動）
+# ★ ページ上部の種目選択（session_state 連動・完全版）
 # ---------------------------------------------------------
-# ① new_event の反映（最優先）
-event_list = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
-event = st.session_state.get("selected_event", "フリー")
 
-# ② selectbox（←ここが本当に重要）
+event_list = ["フリー", "バッタ", "ブレ", "バック", "メドレー"]
+
+# ① new_event の反映（最優先）
+#   selectbox より前に session_state を確定させる
+if "selected_event" not in st.session_state:
+    st.session_state["selected_event"] = "フリー"
+
+event = st.session_state["selected_event"]
+
+# ② selectbox（復元を完全に止める）
 event = st.selectbox(
     "種目を選択してください",
     event_list,
     index=event_list.index(event),
-    key=f"event_selector_{event}"
+    key=f"event_selector_force_{st.session_state['selected_event']}"
 )
 
-# ③ 選んだ event を保存
+# ③ 選んだ event を即反映（←ここが最重要）
 st.session_state["selected_event"] = event
 
 # ---------------------------------------------------------
