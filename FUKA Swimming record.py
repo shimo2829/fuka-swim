@@ -225,7 +225,11 @@ elif event == "ブレ":
 else:
     distance_list = sorted(data["距離"].unique())
 
-distance = st.selectbox("距離を選択してください", distance_list, key="distance_selector")
+distance = st.selectbox(
+    "距離を選択してください",
+    distance_list,
+    key=f"distance_selector_{event}"
+)
 
 st.session_state["selected_distance"] = distance
 distance = st.session_state.get("selected_distance", distance)
