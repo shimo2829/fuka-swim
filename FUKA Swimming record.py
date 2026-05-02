@@ -337,6 +337,23 @@ series_data = [
     for i in range(len(y_data))
 ]
 
+# ---------------------------------------------------------
+# 長水路・短水路でデータを分割
+# ---------------------------------------------------------
+long_series = []
+short_series = []
+
+for i in range(len(y_data)):
+    row = {
+        "value": y_data[i],
+        "label": y_label[i]
+    }
+    if filtered["長水路or短水路"].iloc[i] == "長水路":
+        long_series.append(row)
+    else:
+        short_series.append(row)
+
+
 options = {
     "legend": {
         "top": 0,
@@ -362,21 +379,23 @@ options = {
         "axisLabel": {"formatter": "{value}"}
     },
     "dataZoom": [{"type": "inside"}, {"type": "slider"}],
-   "series": [
+  "series": [
     {
         "name": "長水路",
         "type": "line",
-        "data": [],
+        "data": long_series,
         "lineStyle": {"color": "#3366FF"},
-        "itemStyle": {"color": "#3366FF"}   # ← これ追加
+        "itemStyle": {"color": "#3366FF"}
     },
     {
         "name": "短水路",
         "type": "line",
-        "data": [],
+        "data": short_series,
         "lineStyle": {"color": "#FF3333"},
-        "itemStyle": {"color": "#FF3333"}   # ← これ追加（凡例も赤になる）
-    },
+        "itemStyle": {"color": "#FF3333"}
+    }
+]
+
     {
         "type": "line",
         "data": series_data,
