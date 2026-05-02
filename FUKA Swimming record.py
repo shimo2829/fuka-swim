@@ -200,34 +200,44 @@ event_english = {
 event_en = event_english.get(event, event)
 
 # ---------------------------------------------------------
-# ★ 固定ヘッダー（ページ最上部に固定）
+# ★ 固定ヘッダー（ページ最上部に固定） ← ここを丸ごと置き換え
 # ---------------------------------------------------------
 st.markdown(
     f"""
-    <div style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        background-color: white;
-        padding: 18px 25px;
-        font-size: 28px;
-        font-weight: bold;
-        border-bottom: 2px solid #ddd;
-        z-index: 9999;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    ">
-        <span>FUKA Swimming Records Dashboard</span>
-        <span style="color:{title_color};">【{event_en}】</span>
-    </div>
-
     <style>
+        .fixed-header {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            padding: 18px 25px;
+            border-bottom: 2px solid #ddd;
+            z-index: 9999;
+        }}
+        .header-title {{
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0;
+            padding: 0;
+        }}
+        .header-sub {{
+            font-size: 20px;
+            font-weight: 600;
+            color: {title_color};
+            margin: 0;
+            padding: 0;
+        }}
+        /* ヘッダー分の余白を下に追加 */
         .block-container {{
-            padding-top: 110px;
+            padding-top: 120px !important;
         }}
     </style>
+
+    <div class="fixed-header">
+        <p class="header-title">FUKA Swimming Records Dashboard</p>
+        <p class="header-sub">{event} {distance}m 記録推移</p>
+    </div>
     """,
     unsafe_allow_html=True
 )
