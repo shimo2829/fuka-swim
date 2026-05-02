@@ -189,6 +189,9 @@ event = st.selectbox(
 # ③ 選んだ event を即反映
 st.session_state["selected_event"] = event
 
+st.session_state.clear()
+st.session_state["selected_event"] = new_event
+st.rerun()
 
 # ---------------------------------------------------------
 # 種目カラー
